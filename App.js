@@ -1,101 +1,139 @@
-import React from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Image, View, Dimensions, Text, TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { IMAGES, COLORS } from './constants/assets';
 
-// 主页面组件
-function HomeScreen() {
-  return (
-    <SafeAreaView style={styles.container}>
-      {/* 顶部用户信息 */}
-      <View style={styles.header}>
-        <View style={styles.userInfo}>
-          <Image 
-            style={styles.avatar}
-            source={require('./assets/avatar.png')} 
-          />
-          <Text style={styles.username}>王小明同学</Text>
-        </View>
-        <TouchableOpacity>
-          <Image style={styles.notification} source={require('./assets/bell.png')} />
-        </TouchableOpacity>
-      </View>
+// 导入屏幕组件
+import HomeScreen from './screens/HomeScreen';
+import DiscoveryScreen from './screens/DiscoveryScreen';
+import ProfileScreen from './screens/ProfileScreen';
 
-      {/* 学习进度卡片 */}
-      <View style={styles.progressCard}>
-        <Text style={styles.progressTitle}>本学期进度</Text>
-        {/* 进度条组件 */}
-      </View>
-
-      {/* 快捷功能按钮 */}
-      <View style={styles.quickActions}>
-        <TouchableOpacity style={styles.actionButton}>
-          <Text>自由练习</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
-          <Text>上课签到</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* 功能卡片区域 */}
-      <View style={styles.functionCards}>
-        <TouchableOpacity style={styles.card}>
-          <Text style={styles.cardTitle}>开始锻炼</Text>
-          <TouchableOpacity style={styles.startButton}>
-            <Text>开始</Text>
-          </TouchableOpacity>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.card}>
-          <Text style={styles.cardTitle}>体育课程</Text>
-          <TouchableOpacity style={styles.scheduleButton}>
-            <Text>安排</Text>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
-  );
-}
-
-// 创建底部导航
 const Tab = createBottomTabNavigator();
 
+// 修改 CustomTabButton 组件
+const CustomTabButton = ({ focused, onPress, icon, label, page, pageValue }) => {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={styles.tabButtonContainer}
+    >
+      <View style={[
+        styles.tabButton,
+        page === pageValue && styles.tabButtonActive
+      ]}>
+        <Image 
+          source={icon} 
+          style={styles.tabIcon}
+        />
+        {page === pageValue && <Text style={styles.tabLabel}>{label}</Text>}
+      </View>
+    </TouchableOpacity>
+  );
+};
+
 export default function App() {
+  const [page, setPage] = useState(1);
+
   return (
     <NavigationContainer>
-      <Tab.Navigator>
-        <Tab.Screen name="主页" component={HomeScreen} />
-        <Tab.Screen name="发现" component={DiscoveryScreen} />
-        <Tab.Screen name="我的" component={ProfileScreen} />
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          headerShown: false,
+          tabBarStyle: styles.tabBar,
+          tabBarShowLabel: false,
+          tabBarButton: (props) => {
+            const { focused, onPress } = props;
+            let icon;
+            let label;
+            let pageValue;
+
+            if (route.name === 'Home') {
+              icon = IMAGES.tabIcons.home.active;
+              label = 'Home';
+              pageValue = 1;
+            } else if (route.name === 'Discover') {
+              icon = IMAGES.tabIcons.discovery.active;
+              label = 'Discover';
+              pageValue = 2;
+            } else if (route.name === 'Profile') {
+              icon = IMAGES.tabIcons.profile.active;
+              label = 'Profile';
+              pageValue = 3;
+            }
+
+            return (
+              <CustomTabButton 
+                focused={focused}
+                onPress={() => {
+                  setPage(pageValue);
+                  onPress();
+                }}
+                icon={icon}
+                label={label}
+                page={page}
+                pageValue={pageValue}
+              />
+            );
+          },
+        })}
+      >
+        <Tab.Screen name="Home" component={HomeScreen} />
+        <Tab.Screen name="Discover" component={DiscoveryScreen} />
+        <Tab.Screen name="Profile" component={ProfileScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  tabBar: {
+    position: 'absolute',
+    alignSelf: 'center',
+    height: 80,
+    width: '100%',
+    backgroundColor: '#ffffff',
+    elevation: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
+  },
+  tabButtonContainer: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    height: '100%',
+    justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    bottom: 0,
   },
-  userInfo: {
+  tabButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
+    backgroundColor: '#9E9E9E',
+    borderRadius: 30,
+    paddingVertical: 5,
+    paddingHorizontal: 16,
+    gap: 8,
+    height: 32,
+    marginVertical: 4,
   },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  tabButtonActive: {
+    backgroundColor: '#4744F2',
+    borderRadius: 30,
+    paddingVertical: 5,
+    paddingHorizontal: 16,
+    gap: 8,
+    height: 32,
+    marginVertical: 4,
   },
-  username: {
-    marginLeft: 10,
-    fontSize: 16,
-    fontWeight: 'bold',
+  tabIcon: {
+    width: 20,
+    height: 20,
   },
-  // ... 其他样式定义
+  tabLabel: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+  },
 });
