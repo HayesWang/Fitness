@@ -4,6 +4,7 @@ import { IMAGES, COLORS, SIZES } from '../constants/assets';
 import { useFonts, Rubik_400Regular, Rubik_800ExtraBold_Italic, Rubik_500Medium_Italic, Rubik_600SemiBold_Italic } from '@expo-google-fonts/rubik';
 import { RubikMonoOne_400Regular } from '@expo-google-fonts/rubik-mono-one';
 import * as SplashScreen from 'expo-splash-screen';
+import { useNavigation } from '@react-navigation/native';
 
 // Progress Bar Component
 const ProgressBar = ({ progress, total, color }) => {
@@ -19,6 +20,7 @@ const ProgressBar = ({ progress, total, color }) => {
 };
 
 export default function HomeScreen() {
+  const navigation = useNavigation();
   const [fontsLoaded] = useFonts({
     'Rubik_400Regular': Rubik_400Regular,
     'Rubik_800ExtraBold_Italic': Rubik_800ExtraBold_Italic,
@@ -54,6 +56,13 @@ export default function HomeScreen() {
     }).start(() => setModalVisible(false));
   };
 
+  const handleCardPress = (buttonType) => {
+    if (buttonType === 'start') {
+      navigation.navigate('FreeExercise');
+    }
+    // 可以在这里添加其他按钮类型的处理
+  };
+
   const cardsData = [
     // 第一页
     [
@@ -62,7 +71,8 @@ export default function HomeScreen() {
           {
             title: 'New\nExercise',
             buttonType: 'start',
-            image: IMAGES.functionCards.exercise
+            image: IMAGES.functionCards.exercise,
+            onPress: () => handleCardPress('start')
           }
         ],
         row2: [
@@ -180,11 +190,18 @@ export default function HomeScreen() {
           >
             <View style={styles.functionCardsRow}>
               {page[0].row1.map((card, index) => (
-                <TouchableOpacity key={index} style={styles.functionCard}>
+                <TouchableOpacity 
+                  key={index} 
+                  style={styles.functionCard}
+                  onPress={card.onPress}
+                >
                   <View style={styles.cardContent}>
                     <View>
                       <Text style={styles.cardTitle}>{card.title}</Text>
-                      <TouchableOpacity style={card.buttonType === 'schedule' ? styles.scheduleButton : styles.startButton}>
+                      <TouchableOpacity 
+                        style={card.buttonType === 'schedule' ? styles.scheduleButton : styles.startButton}
+                        onPress={card.onPress}
+                      >
                         <Text style={styles.buttonText}>
                           {card.buttonType === 'schedule' ? 'Schedule' : 'Start'}
                         </Text>

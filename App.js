@@ -2,13 +2,16 @@ import React, { useState } from 'react';
 import { StyleSheet, Image, View, Dimensions, Text, TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { IMAGES, COLORS } from './constants/assets';
 
 // 导入屏幕组件
 import HomeScreen from './screens/HomeScreen';
 import DiscoveryScreen from './screens/DiscoveryScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import FreeExerciseScreen from './screens/FreeExerciseScreen';
 
+const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 // 修改 CustomTabButton 组件
@@ -32,56 +35,65 @@ const CustomTabButton = ({ focused, onPress, icon, label, page, pageValue }) => 
   );
 };
 
-export default function App() {
+function TabNavigator() {
   const [page, setPage] = useState(1);
 
   return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarStyle: styles.tabBar,
+        tabBarShowLabel: false,
+        tabBarButton: (props) => {
+          const { focused, onPress } = props;
+          let icon;
+          let label;
+          let pageValue;
+
+          if (route.name === 'Home') {
+            icon = IMAGES.tabIcons.home.active;
+            label = 'Home';
+            pageValue = 1;
+          } else if (route.name === 'Discover') {
+            icon = IMAGES.tabIcons.discovery.active;
+            label = 'Discover';
+            pageValue = 2;
+          } else if (route.name === 'Profile') {
+            icon = IMAGES.tabIcons.profile.active;
+            label = 'Profile';
+            pageValue = 3;
+          }
+
+          return (
+            <CustomTabButton 
+              focused={focused}
+              onPress={() => {
+                setPage(pageValue);
+                onPress();
+              }}
+              icon={icon}
+              label={label}
+              page={page}
+              pageValue={pageValue}
+            />
+          );
+        },
+      })}
+    >
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Discover" component={DiscoveryScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+}
+
+export default function App() {
+  return (
     <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          headerShown: false,
-          tabBarStyle: styles.tabBar,
-          tabBarShowLabel: false,
-          tabBarButton: (props) => {
-            const { focused, onPress } = props;
-            let icon;
-            let label;
-            let pageValue;
-
-            if (route.name === 'Home') {
-              icon = IMAGES.tabIcons.home.active;
-              label = 'Home';
-              pageValue = 1;
-            } else if (route.name === 'Discover') {
-              icon = IMAGES.tabIcons.discovery.active;
-              label = 'Discover';
-              pageValue = 2;
-            } else if (route.name === 'Profile') {
-              icon = IMAGES.tabIcons.profile.active;
-              label = 'Profile';
-              pageValue = 3;
-            }
-
-            return (
-              <CustomTabButton 
-                focused={focused}
-                onPress={() => {
-                  setPage(pageValue);
-                  onPress();
-                }}
-                icon={icon}
-                label={label}
-                page={page}
-                pageValue={pageValue}
-              />
-            );
-          },
-        })}
-      >
-        <Tab.Screen name="Home" component={HomeScreen} />
-        <Tab.Screen name="Discover" component={DiscoveryScreen} />
-        <Tab.Screen name="Profile" component={ProfileScreen} />
-      </Tab.Navigator>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="MainTabs" component={TabNavigator} />
+        <Stack.Screen name="FreeExercise" component={FreeExerciseScreen} />
+      </Stack.Navigator>
     </NavigationContainer>
   );
 }
