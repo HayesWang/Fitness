@@ -534,11 +534,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Rubik_500Medium_Italic',
   },
   cardImage: {
-    width: 190,
-    height: 190,
+    width: 180,
+    height: 180,
     position: 'absolute',
     right: -30,
-    top: -60,
+    top: -40,
     zIndex: 15,
   },
   exploreButton: {

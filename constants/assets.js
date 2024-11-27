@@ -3,7 +3,7 @@ export const IMAGES = {
   // 头像和用户相关
   avatar: require('../assets/avatar.png'),  // 请确保有这个默认头像图片
   notification: require('../assets/bell.png'),  // 请确保有这个通知图标
-
+  
   // 底部导航图标 - 暂时使用相同的图标
   tabIcons: {
     home: {
@@ -24,6 +24,11 @@ export const IMAGES = {
   functionCards: {
     exercise: require('../assets/exercise.png'),
     course: require('../assets/course.png'),
+  },
+
+  gifs: {
+    route: require('../assets/route.gif'),
+    free: require('../assets/free.gif'),
   },
 };
 
