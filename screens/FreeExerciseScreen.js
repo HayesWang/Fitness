@@ -54,12 +54,18 @@ export default function FreeExerciseScreen() {
             style={styles.exerciseImage}
           />
         </View>
-        <TouchableOpacity style={styles.routeCard}>
+        <TouchableOpacity 
+          style={styles.routeCard}
+          onPress={() => navigation.navigate('PresetRoute')}
+        >
           <Text style={styles.cardTitle}>Preset Route</Text>
           <Text style={styles.cardSubtitle}>Follow certain route at 2km</Text>
           <Image source={route} style={styles.cardGif} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.freeCard}>
+        <TouchableOpacity 
+          style={styles.freeCard}
+          onPress={() => navigation.navigate('Free')}
+        >
           <Text style={styles.cardTitle}>Free Exercise</Text>
           <Text style={styles.cardSubtitle}>Exercise freely at 3km</Text>
           <Image source={free} style={styles.cardGif} />

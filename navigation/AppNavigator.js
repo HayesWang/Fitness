@@ -11,6 +11,7 @@ import DiscoveryScreen from '../screens/DiscoveryScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import FreeExerciseScreen from '../screens/FreeExerciseScreen';
 import PEClassesScreen from '../screens/PEClassesScreen';
+import FreeExercise from '../screens/FreeExercise';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -127,6 +128,7 @@ export default function AppNavigator() {
         <Stack.Screen name="MainTabs" component={TabNavigator} />
         <Stack.Screen name="FreeExercise" component={FreeExerciseScreen} />
         <Stack.Screen name="PEClasses" component={PEClassesScreen} />
+        <Stack.Screen name="Free" component={FreeExercise} />
       </Stack.Navigator>
     </NavigationContainer>
   );
