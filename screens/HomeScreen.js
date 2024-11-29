@@ -59,8 +59,14 @@ export default function HomeScreen() {
   const handleCardPress = (buttonType) => {
     if (buttonType === 'start') {
       navigation.navigate('FreeExercise');
+    } else if (buttonType === 'schedule') {
+      navigation.navigate('PEClasses');
     }
     // 可以在这里添加其他按钮类型的处理
+  };
+
+  const handlePEClassesPress = () => {
+    navigation.navigate('PEClasses');
   };
 
   const cardsData = [
@@ -79,7 +85,8 @@ export default function HomeScreen() {
           {
             title: 'PE\nCourses',
             buttonType: 'schedule',
-            image: IMAGES.functionCards.course
+            image: IMAGES.functionCards.course,
+            onPress: () => handleCardPress('schedule')
           }
         ]
       }
@@ -89,16 +96,16 @@ export default function HomeScreen() {
       {
         row1: [
           {
-            title: 'Card\nThree',
-            buttonType: 'start',
-            image: IMAGES.functionCards.cardThree
+            title: 'Examine\nGrade',
+            buttonType: 'check',
+            image: IMAGES.functionCards.ExamineGrade
           }
         ],
         row2: [
           {
-            title: 'Card\nFour',
+            title: 'Daily\nOutfit',
             buttonType: 'start',
-            image: IMAGES.functionCards.cardFour
+            image: IMAGES.functionCards.DailyOutfit
           }
         ]
       }
@@ -167,6 +174,9 @@ export default function HomeScreen() {
         <TouchableOpacity style={styles.actionButton}>
           <Text style={styles.actionText}>Schedule</Text>
         </TouchableOpacity>
+        <TouchableOpacity onPress={handlePEClassesPress}>
+          <Text>PE Classes</Text>
+        </TouchableOpacity>
       </ScrollView>
 
       {/* Function Cards */}
@@ -203,7 +213,8 @@ export default function HomeScreen() {
                         onPress={card.onPress}
                       >
                         <Text style={styles.buttonText}>
-                          {card.buttonType === 'schedule' ? 'Schedule' : 'Start'}
+                          {card.buttonType === 'schedule' ? 'Schedule' : 
+                           card.buttonType === 'check' ? 'Check' : 'Start'}
                         </Text>
                       </TouchableOpacity>
                     </View>
@@ -218,11 +229,18 @@ export default function HomeScreen() {
 
             <View style={styles.functionCardsRow}>
               {page[0].row2.map((card, index) => (
-                <TouchableOpacity key={index} style={styles.functionCard}>
+                <TouchableOpacity 
+                  key={index} 
+                  style={styles.functionCard}
+                  onPress={card.onPress}
+                >
                   <View style={styles.cardContent}>
                     <View>
                       <Text style={styles.cardTitle}>{card.title}</Text>
-                      <TouchableOpacity style={card.buttonType === 'schedule' ? styles.scheduleButton : styles.startButton}>
+                      <TouchableOpacity 
+                        style={card.buttonType === 'schedule' ? styles.scheduleButton : styles.startButton}
+                        onPress={card.onPress}
+                      >
                         <Text style={styles.buttonText}>
                           {card.buttonType === 'schedule' ? 'Schedule' : 'Start'}
                         </Text>
@@ -230,7 +248,7 @@ export default function HomeScreen() {
                     </View>
                     <Image 
                       source={card.image}
-                      style={styles.cardImage}
+                      style={styles.dailyOutfitImage}
                     />
                   </View>
                 </TouchableOpacity>
@@ -539,6 +557,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: -30,
     top: -40,
+    zIndex: 15,
+  },
+  dailyOutfitImage: {
+    width: 140,  // 更小的尺寸
+    height: 140, // 更小的尺寸
+    position: 'absolute',
+    right: -20,
+    top: -30,
     zIndex: 15,
   },
   exploreButton: {
