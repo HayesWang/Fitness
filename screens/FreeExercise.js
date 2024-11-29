@@ -8,15 +8,26 @@ import polyline from 'polyline'; // 用于解析Google Directions API的折线�
 const FreeExercise = () => {
   const navigation = useNavigation();
   const [currentLocation, setCurrentLocation] = useState(null); // 当前用户位置
-  const [fullRouteCoordinates, setFullRouteCoordinates] = useState([]); // 记录完整路径的坐标数组
+  const [initialPoint, setInitialPoint] = useState(null); // 初始起点
+  const [finalPoint, setFinalPoint] = useState(null); // 最终终点
+  const [fullRouteCoordinates, setFullRouteCoordinates] = useState([]); // 完整路径
   const mapRef = useRef(null); // 地图引用
   const [repeatCount, setRepeatCount] = useState(0); // 路径移动重复计数
+  const [isFinalRoute, setIsFinalRoute] = useState(false); // 是否显示最终路径
 
   useEffect(() => {
     const fetchRoute = async () => {
-      // 如果已经完成 10 次路径生成，停止
-      if (repeatCount >= 10) {
-        Alert.alert('完成', '已完成 10 次路径生成');
+      // 如果完成 10 次路径生成，重新计算最终路径
+      if (repeatCount >= 15) {
+        if (initialPoint && finalPoint) {
+          const finalRoute = await calculateFinalRoute(initialPoint, finalPoint);
+          if (finalRoute) {
+            setFullRouteCoordinates(finalRoute.coordinates);
+            setIsFinalRoute(true); // 显示最终路径
+          } else {
+            Alert.alert('路径计算失败', '无法生成最终路径');
+          }
+        }
         return;
       }
 
@@ -29,11 +40,14 @@ const FreeExercise = () => {
         }
         const location = await Location.getCurrentPositionAsync({});
         setCurrentLocation(location.coords);
+        setInitialPoint(location.coords); // 记录初始起点
 
         const directions = await getRouteAlongRoads(location.coords);
         if (directions) {
           setFullRouteCoordinates(directions.coordinates); // 初始化完整路径
           setRepeatCount(repeatCount + 1); // 启动下一段路径
+        } else {
+          Alert.alert('路径生成失败', '无法找到有效路径');
         }
       } else {
         // 使用上次终点作为下一次路径的起点
@@ -41,7 +55,10 @@ const FreeExercise = () => {
         const directions = await getRouteAlongRoads(lastEndpoint);
         if (directions) {
           setFullRouteCoordinates((prev) => [...prev, ...directions.coordinates]); // 更新完整路径
+          setFinalPoint(lastEndpoint); // 更新最终终点
           setRepeatCount(repeatCount + 1); // 启动下一段路径
+        } else {
+          Alert.alert('路径生成失败', '无法找到有效路径');
         }
       }
     };
@@ -71,7 +88,9 @@ const FreeExercise = () => {
       );
       const data = await response.json();
 
-      if (data.routes.length > 0) {
+      console.log('Google Directions API response:', data); // 打印响应数据
+
+      if (data.routes && data.routes.length > 0) {
         const points = data.routes[0].overview_polyline.points;
         const coordinates = polyline.decode(points).map(([lat, lng]) => ({
           latitude: lat,
@@ -84,7 +103,36 @@ const FreeExercise = () => {
       }
     } catch (error) {
       Alert.alert('错误', '获取路径数据失败，请稍后重试');
-      console.error(error);
+      console.error('Error fetching route:', error);
+      return null;
+    }
+  };
+
+  // 计算从起点到终点的最终完整路径
+  const calculateFinalRoute = async (start, end) => {
+    const apiKey = 'AIzaSyAKzq5Mda21VqFSbfOpDMkHqhsCgG_RCoo'; // 替换为你的 Google API 密钥
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/directions/json?origin=${start.latitude},${start.longitude}&destination=${end.latitude},${end.longitude}&mode=walking&key=${apiKey}`
+      );
+      const data = await response.json();
+
+      console.log('Final route API response:', data); // 打印最终路径响应
+
+      if (data.routes && data.routes.length > 0) {
+        const points = data.routes[0].overview_polyline.points;
+        const coordinates = polyline.decode(points).map(([lat, lng]) => ({
+          latitude: lat,
+          longitude: lng,
+        }));
+        return { coordinates };
+      } else {
+        Alert.alert('无法生成最终路径', '请检查起点和终点是否有效');
+        return null;
+      }
+    } catch (error) {
+      Alert.alert('错误', '获取最终路径失败，请稍后重试');
+      console.error('Error fetching final route:', error);
       return null;
     }
   };
@@ -114,28 +162,28 @@ const FreeExercise = () => {
         showsUserLocation={true}
         showsMyLocationButton={true}
       >
-        {/* 完整路径绘制 */}
-        {fullRouteCoordinates.length > 1 && (
+        {/* 最终路径或完整路径绘制 */}
+        {fullRouteCoordinates.length > 1 && isFinalRoute && (
           <Polyline
             coordinates={fullRouteCoordinates}
             strokeWidth={5}
-            strokeColor="green" // 完整路径颜色
+            strokeColor="blue" // 最终路径为蓝色
           />
         )}
 
         {/* 起点标记 */}
-        {fullRouteCoordinates.length > 0 && (
+        {initialPoint && (
           <Marker
-            coordinate={fullRouteCoordinates[0]}
+            coordinate={initialPoint}
             title="起点"
             pinColor="green"
           />
         )}
 
         {/* 终点标记 */}
-        {fullRouteCoordinates.length > 0 && (
+        {finalPoint && (
           <Marker
-            coordinate={fullRouteCoordinates[fullRouteCoordinates.length - 1]}
+            coordinate={finalPoint}
             title="终点"
             pinColor="red"
           />
