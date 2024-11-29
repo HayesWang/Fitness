@@ -12,7 +12,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import FreeExerciseScreen from '../screens/FreeExerciseScreen';
 import PEClassesScreen from '../screens/PEClassesScreen';
 import FreeExercise from '../screens/FreeExercise';
-
+import CheckInScreen from '../screens/CheckInScreen';
 
 
 const Stack = createNativeStackNavigator();
@@ -131,6 +131,7 @@ export default function AppNavigator() {
         <Stack.Screen name="FreeExercise" component={FreeExerciseScreen} />
         <Stack.Screen name="PEClasses" component={PEClassesScreen} />
         <Stack.Screen name="Free" component={FreeExercise} />
+        <Stack.Screen name="CheckIn" component={CheckInScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

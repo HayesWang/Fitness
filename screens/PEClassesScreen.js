@@ -225,6 +225,7 @@ const PEClassesScreen = () => {
             !hasTodayClass && styles.noClassButton
           ]}
           disabled={!hasTodayClass}
+          onPress={() => navigation.navigate('CheckIn')}
         >
           <Text style={styles.signInText}>
             {hasTodayClass ? 'Sign in for Today\'s Lesson' : 'No Classes Today'}
