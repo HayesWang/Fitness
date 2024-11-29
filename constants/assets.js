@@ -24,6 +24,8 @@ export const IMAGES = {
   functionCards: {
     exercise: require('../assets/exercise.png'),
     course: require('../assets/course.png'),
+    DailyOutfit: require('../assets/DailyOutfit.png'),
+    ExamineGrade: require('../assets/ExamineGrade.png'),
   },
 
   gifs: {
