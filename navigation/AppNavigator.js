@@ -13,6 +13,8 @@ import FreeExerciseScreen from '../screens/FreeExerciseScreen';
 import PEClassesScreen from '../screens/PEClassesScreen';
 import FreeExercise from '../screens/FreeExercise';
 
+
+
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
