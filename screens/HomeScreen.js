@@ -171,12 +171,6 @@ export default function HomeScreen() {
         <TouchableOpacity style={styles.actionButton}>
           <Text style={styles.actionText}>Advice</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
-          <Text style={styles.actionText}>Schedule</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handlePEClassesPress}>
-          <Text>PE Classes</Text>
-        </TouchableOpacity>
       </ScrollView>
 
       {/* Function Cards */}
