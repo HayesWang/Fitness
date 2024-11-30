@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { Card, Text } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -21,6 +21,33 @@ const ExerciseHistory = ({ navigation }) => {
     }
   };
 
+  const clearHistory = async () => {
+    try {
+      await AsyncStorage.removeItem('exerciseRecords');
+      setExerciseRecords([]);
+    } catch (error) {
+      console.error('清空历史记录失败:', error);
+    }
+  };
+
+  const handleLongPress = () => {
+    Alert.alert(
+      '清空历史记录',
+      '确定要清空所有运动记录吗？此操作不可撤销。',
+      [
+        {
+          text: '取消',
+          style: 'cancel',
+        },
+        {
+          text: '确定',
+          onPress: clearHistory,
+          style: 'destructive',
+        },
+      ]
+    );
+  };
+
   const renderExerciseItem = ({ item }) => (
     <TouchableOpacity 
       onPress={() => navigation.navigate('ExerciseDetail', { record: item })}
@@ -40,14 +67,19 @@ const ExerciseHistory = ({ navigation }) => {
   );
 
   return (
-    <View style={styles.container}>
+    <TouchableOpacity 
+      onLongPress={handleLongPress}
+      delayLongPress={1000}
+      style={styles.container}
+      activeOpacity={1}
+    >
       <FlatList
         data={exerciseRecords}
         renderItem={renderExerciseItem}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContainer}
       />
-    </View>
+    </TouchableOpacity>
   );
 };
 

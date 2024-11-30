@@ -8,10 +8,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const FreeExercise = () => {
   const navigation = useNavigation();
-  const [currentLocation, setCurrentLocation] = useState(null); // 当前用户位置
-  const [routeCoordinates, setRouteCoordinates] = useState([]); // 路径坐标数组
-  const [distance, setDistance] = useState(0); // 跑步总距离
-  const mapRef = useRef(null); // 地图引用
+  const [currentLocation, setCurrentLocation] = useState(null); // Current user location
+  const [routeCoordinates, setRouteCoordinates] = useState([]); // Path coordinate array
+  const [distance, setDistance] = useState(0); // Total running distance
+  const mapRef = useRef(null); // Map reference
   const [lastValidLocation, setLastValidLocation] = useState(null);
   const [lastUpdateTime, setLastUpdateTime] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -26,7 +26,7 @@ const FreeExercise = () => {
         }
       },
       onPanResponderRelease: (_, gestureState) => {
-        // 根据滑动方向决定展开或收起
+        // Determine whether to expand or collapse based on the swipe direction
         const shouldExpand = gestureState.dy < 0;
         Animated.spring(cardHeight, {
           toValue: shouldExpand ? 250 : 120,
@@ -38,7 +38,7 @@ const FreeExercise = () => {
   const [startTime, setStartTime] = useState(null);
   const [duration, setDuration] = useState(0);
 
-  // 添加计时器逻辑
+  // Add timer logic
   useEffect(() => {
     let timer;
     if (isRunning) {
@@ -51,23 +51,23 @@ const FreeExercise = () => {
     };
   }, [isRunning]);
 
-  // 监听位置变化
+  // Listen for location changes
   useEffect(() => {
     let locationSubscription;
 
     const startTracking = async () => {
-      // 请求位置权限
+      // Request location permission
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('权限被拒绝', '无法访问位置数据');
+        Alert.alert('Permission Denied', 'Unable to access location data');
         return;
       }
 
-      // 获取当前位置
+      // Get current location
       const location = await Location.getCurrentPositionAsync({});
       setCurrentLocation(location.coords);
       
-      // 只有在开始运动时才初始化路径
+      // Initialize path only when starting exercise
       if (isRunning) {
         setRouteCoordinates([location.coords]);
       }
@@ -82,10 +82,10 @@ const FreeExercise = () => {
           const { latitude, longitude } = newLocation.coords;
           const currentTime = new Date().getTime();
 
-          // 更新当前位置
+          // Update current location
           setCurrentLocation(newLocation.coords);
 
-          // 只在运动状态下记录轨迹和计算距离
+          // Record trajectory and calculate distance only when exercising
           if (isRunning && isValidLocationUpdate(newLocation.coords, currentTime)) {
             setRouteCoordinates(prev => [...prev, newLocation.coords]);
             
@@ -103,7 +103,7 @@ const FreeExercise = () => {
             setLastUpdateTime(currentTime);
           }
 
-          // 地图视图更新
+          // Map view update
           if (mapRef.current) {
             mapRef.current.animateToRegion({
               latitude,
@@ -121,15 +121,15 @@ const FreeExercise = () => {
     return () => {
       if (locationSubscription) locationSubscription.remove();
     };
-  }, [lastValidLocation, lastUpdateTime, isRunning]); // 添加 isRunning 作为依赖
+  }, [lastValidLocation, lastUpdateTime, isRunning]); // Add isRunning as a dependency
 
-  // 新增：验证位置更新是否有效
+  // New: Verify whether the location update is valid
   const isValidLocationUpdate = (newCoords, currentTime) => {
     if (!lastValidLocation || !lastUpdateTime) {
       return true;
     }
 
-    // 计算与上一个有效位置的距离（米）
+    // Calculate the distance between the last valid location and the new location (meters)
     const distance = getDistanceFromLatLonInMeters(
       lastValidLocation.latitude,
       lastValidLocation.longitude,
@@ -137,22 +137,22 @@ const FreeExercise = () => {
       newCoords.longitude
     );
 
-    // 计算时间差（秒）
+    // Calculate the time difference (seconds)
     const timeDiff = (currentTime - lastUpdateTime) / 1000;
 
-    // 计算速度（米/秒）
+    // Calculate the speed (meters/second)
     const speed = distance / timeDiff;
 
-    // 过滤条件：
-    // 1. 距离必须大于 2 米（过滤掉微小抖动）
-    // 2. 速度必须小于 8.33 米/秒（约 30 公里/小时）
-    // 3. 速度必须大于 0.5 米/秒（约 1.8 公里/小时）
+    // Filter conditions:
+    // 1. The distance must be greater than 2 meters (to filter out minor jitter)
+    // 2. The speed must be less than 8.33 meters/second (approximately 30 km/h)
+    // 3. The speed must be greater than 0.5 meters/second (approximately 1.8 km/h)
     return distance > 2 && speed < 8.33 && speed > 0.5;
   };
 
-  // 计算两点之间的距离（单位：米）
+  // Calculate the distance between two points (unit: meters)
   const getDistanceFromLatLonInMeters = (lat1, lon1, lat2, lon2) => {
-    const R = 6371e3; // 地球半径（米）
+    const R = 6371e3; // Earth radius (meters)
     const φ1 = (lat1 * Math.PI) / 180;
     const φ2 = (lat2 * Math.PI) / 180;
     const Δφ = ((lat2 - lat1) * Math.PI) / 180;
@@ -163,20 +163,20 @@ const FreeExercise = () => {
       Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-    return R * c; // 返回距离（米）
+    return R * c; // Return distance (meters)
   };
 
-  // 修改开始/暂停按钮的处理函数
+  // Modify the processing function of the start/pause button
   const handleRunningState = () => {
     if (!isRunning) {
-      // 开始运动时重置数据
+      // Reset data when starting exercise
       setRouteCoordinates([]);
       setDistance(0);
       setLastValidLocation(null);
       setLastUpdateTime(null);
       setStartTime(new Date());
       setDuration(0);
-      // 开始运动时自动收起状态栏
+      // Automatically collapse the status bar when starting exercise
       Animated.spring(cardHeight, {
         toValue: 120,
         useNativeDriver: false,
@@ -185,7 +185,7 @@ const FreeExercise = () => {
     setIsRunning(!isRunning);
   };
 
-  // 保存运动记录
+  // Save exercise record
   const saveExerciseRecord = async () => {
     try {
       const newRecord = {
@@ -196,36 +196,36 @@ const FreeExercise = () => {
         route: routeCoordinates,
       };
 
-      // 获取现有记录
+      // Get existing records
       const existingRecords = await AsyncStorage.getItem('exerciseRecords');
       const records = existingRecords ? JSON.parse(existingRecords) : [];
 
-      // 添加新记录
+      // Add new record
       records.unshift(newRecord);
 
-      // 保存更新后的记录
+      // Save updated records
       await AsyncStorage.setItem('exerciseRecords', JSON.stringify(records));
 
-      // 导航到运动历史页面
+      // Navigate to the exercise history page
       navigation.navigate('ExerciseHistory');
     } catch (error) {
-      console.error('保存运动记录失败:', error);
-      Alert.alert('错误', '保存运动记录失败');
+      console.error('Failed to save exercise record:', error);
+      Alert.alert('Error', 'Failed to save exercise record');
     }
   };
 
-  // 修改结束运动的处理函数
+  // Modify the processing function of ending exercise
   const handleEndExercise = () => {
     Alert.alert(
-      '结束运动',
-      '确定要结束本次运动吗？',
+      'End Exercise',
+      'Are you sure you want to end this exercise?',
       [
         {
-          text: '取消',
+          text: 'Cancel',
           style: 'cancel'
         },
         {
-          text: '保存并结束',
+          text: 'Save and End',
           onPress: async () => {
             setIsRunning(false);
             await saveExerciseRecord();
@@ -235,19 +235,19 @@ const FreeExercise = () => {
     );
   };
 
-  // 添加处理返回的函数
+  // Add the processing function for returning
   const handleGoBack = () => {
     if (isRunning) {
       Alert.alert(
-        '结束运动',
-        '运动正在进行中，确定要结束吗？',
+        'End Exercise',
+        'Exercise is in progress, are you sure you want to end?',
         [
           {
-            text: '取消',
+            text: 'Cancel',
             style: 'cancel'
           },
           {
-            text: '确定',
+            text: 'Confirm',
             onPress: () => {
               setIsRunning(false);
               navigation.goBack();
@@ -262,19 +262,19 @@ const FreeExercise = () => {
 
   return (
     <View style={styles.container}>
-      {/* 修改返回按钮的点击处理 */}
+      {/* Modify the click processing of the return button */}
       <View style={styles.closeButton}>
         <TouchableOpacity 
           onPress={handleGoBack}
           style={styles.closeButtonTouchable}
         >
-          <Text style={styles.closeButtonText}>返回</Text>
+          <Text style={styles.closeButtonText}>Back</Text>
         </TouchableOpacity>
       </View>
 
-      {/* 地图 */}
+      {/* Map */}
       <MapView
-        ref={mapRef} // 绑定地图引用
+        ref={mapRef} // Bind map reference
         style={styles.map}
         initialRegion={{
           latitude: currentLocation ? currentLocation.latitude : 0,
@@ -285,7 +285,7 @@ const FreeExercise = () => {
         showsUserLocation={true}
         showsMyLocationButton={true}
       >
-        {/* 路径绘制 */}
+        {/* Path drawing */}
         {routeCoordinates.length > 1 && (
           <Polyline
             coordinates={routeCoordinates}
@@ -294,16 +294,16 @@ const FreeExercise = () => {
           />
         )}
 
-        {/* 当前地点标记 */}
+        {/* Current location marker */}
         {currentLocation && (
           <Marker
             coordinate={currentLocation}
-            title="当前位置"
+            title="Current Location"
           />
         )}
       </MapView>
 
-      {/* 状态卡片 */}
+      {/* Status card */}
       <Animated.View
         style={[
           styles.statusCard,
@@ -315,8 +315,8 @@ const FreeExercise = () => {
       >
         <View style={styles.dragIndicator} />
         <Card.Content>
-          <Text variant="titleLarge">跑步距离</Text>
-          <Text variant="displaySmall">{distance.toFixed(2)} 公里</Text>
+          <Text variant="titleLarge">Distance</Text>
+          <Text variant="displaySmall">{distance.toFixed(2)} km</Text>
           
           <Animated.View
             style={{
@@ -331,17 +331,17 @@ const FreeExercise = () => {
               onPress={handleRunningState}
             >
               <Text style={styles.runButtonText}>
-                {isRunning ? '暂停运动' : '开始运动'}
+                {isRunning ? 'Pause Exercise' : 'Start Exercise'}
               </Text>
             </TouchableOpacity>
 
-            {/* 添加结束运动按钮，仅在暂停状态显示 */}
+            {/* Add end exercise button, only visible when paused */}
             {!isRunning && routeCoordinates.length > 0 && (
               <TouchableOpacity
                 style={[styles.runButton, styles.endButton]}
                 onPress={handleEndExercise}
               >
-                <Text style={styles.runButtonText}>结束运动</Text>
+                <Text style={styles.runButtonText}>End Exercise</Text>
               </TouchableOpacity>
             )}
           </Animated.View>
