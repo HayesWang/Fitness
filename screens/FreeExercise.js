@@ -1,148 +1,271 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Dimensions, TouchableOpacity, Alert, Text } from 'react-native';
+import { View, StyleSheet, Dimensions, TouchableOpacity, Alert, Animated, PanResponder } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
+import { Card, Text } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import polyline from 'polyline'; // 用于解析Google Directions API的折线数据
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const FreeExercise = () => {
   const navigation = useNavigation();
   const [currentLocation, setCurrentLocation] = useState(null); // 当前用户位置
-  const [initialPoint, setInitialPoint] = useState(null); // 初始起点
-  const [finalPoint, setFinalPoint] = useState(null); // 最终终点
-  const [fullRouteCoordinates, setFullRouteCoordinates] = useState([]); // 完整路径
+  const [routeCoordinates, setRouteCoordinates] = useState([]); // 路径坐标数组
+  const [distance, setDistance] = useState(0); // 跑步总距离
   const mapRef = useRef(null); // 地图引用
-  const [repeatCount, setRepeatCount] = useState(0); // 路径移动重复计数
-  const [isFinalRoute, setIsFinalRoute] = useState(false); // 是否显示最终路径
-
-  useEffect(() => {
-    const fetchRoute = async () => {
-      // 如果完成 10 次路径生成，重新计算最终路径
-      if (repeatCount >= 15) {
-        if (initialPoint && finalPoint) {
-          const finalRoute = await calculateFinalRoute(initialPoint, finalPoint);
-          if (finalRoute) {
-            setFullRouteCoordinates(finalRoute.coordinates);
-            setIsFinalRoute(true); // 显示最终路径
-          } else {
-            Alert.alert('路径计算失败', '无法生成最终路径');
-          }
+  const [lastValidLocation, setLastValidLocation] = useState(null);
+  const [lastUpdateTime, setLastUpdateTime] = useState(null);
+  const [isRunning, setIsRunning] = useState(false);
+  const cardHeight = useRef(new Animated.Value(120)).current;
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, gestureState) => {
+        const newHeight = 120 - gestureState.dy;
+        if (newHeight >= 120 && newHeight <= 250) {
+          cardHeight.setValue(newHeight);
         }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        // 根据滑动方向决定展开或收起
+        const shouldExpand = gestureState.dy < 0;
+        Animated.spring(cardHeight, {
+          toValue: shouldExpand ? 250 : 120,
+          useNativeDriver: false,
+        }).start();
+      },
+    })
+  ).current;
+  const [startTime, setStartTime] = useState(null);
+  const [duration, setDuration] = useState(0);
+
+  // 添加计时器逻辑
+  useEffect(() => {
+    let timer;
+    if (isRunning) {
+      timer = setInterval(() => {
+        setDuration(prev => prev + 1);
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isRunning]);
+
+  // 监听位置变化
+  useEffect(() => {
+    let locationSubscription;
+
+    const startTracking = async () => {
+      // 请求位置权限
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('权限被拒绝', '无法访问位置数据');
         return;
       }
 
-      if (repeatCount === 0) {
-        // 初始获取位置
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert('权限被拒绝', '无法访问位置数据');
-          return;
-        }
-        const location = await Location.getCurrentPositionAsync({});
-        setCurrentLocation(location.coords);
-        setInitialPoint(location.coords); // 记录初始起点
-
-        const directions = await getRouteAlongRoads(location.coords);
-        if (directions) {
-          setFullRouteCoordinates(directions.coordinates); // 初始化完整路径
-          setRepeatCount(repeatCount + 1); // 启动下一段路径
-        } else {
-          Alert.alert('路径生成失败', '无法找到有效路径');
-        }
-      } else {
-        // 使用上次终点作为下一次路径的起点
-        const lastEndpoint = fullRouteCoordinates[fullRouteCoordinates.length - 1];
-        const directions = await getRouteAlongRoads(lastEndpoint);
-        if (directions) {
-          setFullRouteCoordinates((prev) => [...prev, ...directions.coordinates]); // 更新完整路径
-          setFinalPoint(lastEndpoint); // 更新最终终点
-          setRepeatCount(repeatCount + 1); // 启动下一段路径
-        } else {
-          Alert.alert('路径生成失败', '无法找到有效路径');
-        }
+      // 获取当前位置
+      const location = await Location.getCurrentPositionAsync({});
+      setCurrentLocation(location.coords);
+      
+      // 只有在开始运动时才初始化路径
+      if (isRunning) {
+        setRouteCoordinates([location.coords]);
       }
+
+      locationSubscription = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.High,
+          timeInterval: 1000,
+          distanceInterval: 1,
+        },
+        (newLocation) => {
+          const { latitude, longitude } = newLocation.coords;
+          const currentTime = new Date().getTime();
+
+          // 更新当前位置
+          setCurrentLocation(newLocation.coords);
+
+          // 只在运动状态下记录轨迹和计算距离
+          if (isRunning && isValidLocationUpdate(newLocation.coords, currentTime)) {
+            setRouteCoordinates(prev => [...prev, newLocation.coords]);
+            
+            if (lastValidLocation) {
+              const newDistance = getDistanceFromLatLonInMeters(
+                lastValidLocation.latitude,
+                lastValidLocation.longitude,
+                latitude,
+                longitude
+              ) / 1000;
+              setDistance(prevDistance => prevDistance + newDistance);
+            }
+
+            setLastValidLocation(newLocation.coords);
+            setLastUpdateTime(currentTime);
+          }
+
+          // 地图视图更新
+          if (mapRef.current) {
+            mapRef.current.animateToRegion({
+              latitude,
+              longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            }, 500);
+          }
+        }
+      );
     };
 
-    fetchRoute();
-  }, [repeatCount]); // 监听 repeatCount，触发路径重新获取
+    startTracking();
 
-  // 调用 Google Directions API 获取沿道路的路径
-  const getRouteAlongRoads = async (start) => {
-    const apiKey = 'AIzaSyAKzq5Mda21VqFSbfOpDMkHqhsCgG_RCoo'; // 替换为你的 Google API 密钥
+    return () => {
+      if (locationSubscription) locationSubscription.remove();
+    };
+  }, [lastValidLocation, lastUpdateTime, isRunning]); // 添加 isRunning 作为依赖
 
-    // 随机生成方向（角度）和距离
-    const angle = Math.random() * 180; // 随机生成 0 到 180 度方向
-    const distance = 0.0015; // 固定偏移距离（可调整）
+  // 新增：验证位置更新是否有效
+  const isValidLocationUpdate = (newCoords, currentTime) => {
+    if (!lastValidLocation || !lastUpdateTime) {
+      return true;
+    }
 
-    // 转换角度为弧度
-    const radians = (angle * Math.PI) / 180;
+    // 计算与上一个有效位置的距离（米）
+    const distance = getDistanceFromLatLonInMeters(
+      lastValidLocation.latitude,
+      lastValidLocation.longitude,
+      newCoords.latitude,
+      newCoords.longitude
+    );
 
-    // 计算随机终点的经纬度
-    const destinationLatitude = start.latitude + Math.cos(radians) * distance;
-    const destinationLongitude = start.longitude + Math.sin(radians) * distance;
-    const destination = `${destinationLatitude},${destinationLongitude}`;
+    // 计算时间差（秒）
+    const timeDiff = (currentTime - lastUpdateTime) / 1000;
 
+    // 计算速度（米/秒）
+    const speed = distance / timeDiff;
+
+    // 过滤条件：
+    // 1. 距离必须大于 2 米（过滤掉微小抖动）
+    // 2. 速度必须小于 8.33 米/秒（约 30 公里/小时）
+    // 3. 速度必须大于 0.5 米/秒（约 1.8 公里/小时）
+    return distance > 2 && speed < 8.33 && speed > 0.5;
+  };
+
+  // 计算两点之间的距离（单位：米）
+  const getDistanceFromLatLonInMeters = (lat1, lon1, lat2, lon2) => {
+    const R = 6371e3; // 地球半径（米）
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c; // 返回距离（米）
+  };
+
+  // 修改开始/暂停按钮的处理函数
+  const handleRunningState = () => {
+    if (!isRunning) {
+      // 开始运动时重置数据
+      setRouteCoordinates([]);
+      setDistance(0);
+      setLastValidLocation(null);
+      setLastUpdateTime(null);
+      setStartTime(new Date());
+      setDuration(0);
+      // 开始运动时自动收起状态栏
+      Animated.spring(cardHeight, {
+        toValue: 120,
+        useNativeDriver: false,
+      }).start();
+    }
+    setIsRunning(!isRunning);
+  };
+
+  // 保存运动记录
+  const saveExerciseRecord = async () => {
     try {
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/directions/json?origin=${start.latitude},${start.longitude}&destination=${destination}&mode=walking&key=${apiKey}`
-      );
-      const data = await response.json();
+      const newRecord = {
+        id: Date.now().toString(),
+        date: startTime.toISOString(),
+        distance,
+        duration,
+        route: routeCoordinates,
+      };
 
-      console.log('Google Directions API response:', data); // 打印响应数据
+      // 获取现有记录
+      const existingRecords = await AsyncStorage.getItem('exerciseRecords');
+      const records = existingRecords ? JSON.parse(existingRecords) : [];
 
-      if (data.routes && data.routes.length > 0) {
-        const points = data.routes[0].overview_polyline.points;
-        const coordinates = polyline.decode(points).map(([lat, lng]) => ({
-          latitude: lat,
-          longitude: lng,
-        }));
-        return { coordinates };
-      } else {
-        Alert.alert('无可用路线', '请检查起点和终点是否有效');
-        return null;
-      }
+      // 添加新记录
+      records.unshift(newRecord);
+
+      // 保存更新后的记录
+      await AsyncStorage.setItem('exerciseRecords', JSON.stringify(records));
+
+      // 导航到运动历史页面
+      navigation.navigate('ExerciseHistory');
     } catch (error) {
-      Alert.alert('错误', '获取路径数据失败，请稍后重试');
-      console.error('Error fetching route:', error);
-      return null;
+      console.error('保存运动记录失败:', error);
+      Alert.alert('错误', '保存运动记录失败');
     }
   };
 
-  // 计算从起点到终点的最终完整路径
-  const calculateFinalRoute = async (start, end) => {
-    const apiKey = 'AIzaSyAKzq5Mda21VqFSbfOpDMkHqhsCgG_RCoo'; // 替换为你的 Google API 密钥
-    try {
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/directions/json?origin=${start.latitude},${start.longitude}&destination=${end.latitude},${end.longitude}&mode=walking&key=${apiKey}`
+  // 修改结束运动的处理函数
+  const handleEndExercise = () => {
+    Alert.alert(
+      '结束运动',
+      '确定要结束本次运动吗？',
+      [
+        {
+          text: '取消',
+          style: 'cancel'
+        },
+        {
+          text: '保存并结束',
+          onPress: async () => {
+            setIsRunning(false);
+            await saveExerciseRecord();
+          }
+        }
+      ]
+    );
+  };
+
+  // 添加处理返回的函数
+  const handleGoBack = () => {
+    if (isRunning) {
+      Alert.alert(
+        '结束运动',
+        '运动正在进行中，确定要结束吗？',
+        [
+          {
+            text: '取消',
+            style: 'cancel'
+          },
+          {
+            text: '确定',
+            onPress: () => {
+              setIsRunning(false);
+              navigation.goBack();
+            }
+          }
+        ]
       );
-      const data = await response.json();
-
-      console.log('Final route API response:', data); // 打印最终路径响应
-
-      if (data.routes && data.routes.length > 0) {
-        const points = data.routes[0].overview_polyline.points;
-        const coordinates = polyline.decode(points).map(([lat, lng]) => ({
-          latitude: lat,
-          longitude: lng,
-        }));
-        return { coordinates };
-      } else {
-        Alert.alert('无法生成最终路径', '请检查起点和终点是否有效');
-        return null;
-      }
-    } catch (error) {
-      Alert.alert('错误', '获取最终路径失败，请稍后重试');
-      console.error('Error fetching final route:', error);
-      return null;
+    } else {
+      navigation.goBack();
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* 返回按钮 */}
+      {/* 修改返回按钮的点击处理 */}
       <View style={styles.closeButton}>
         <TouchableOpacity 
-          onPress={() => navigation.goBack()}
+          onPress={handleGoBack}
           style={styles.closeButtonTouchable}
         >
           <Text style={styles.closeButtonText}>返回</Text>
@@ -162,33 +285,68 @@ const FreeExercise = () => {
         showsUserLocation={true}
         showsMyLocationButton={true}
       >
-        {/* 最终路径或完整路径绘制 */}
-        {fullRouteCoordinates.length > 1 && isFinalRoute && (
+        {/* 路径绘制 */}
+        {routeCoordinates.length > 1 && (
           <Polyline
-            coordinates={fullRouteCoordinates}
+            coordinates={routeCoordinates}
             strokeWidth={5}
-            strokeColor="blue" // 最终路径为蓝色
+            strokeColor="blue"
           />
         )}
 
-        {/* 起点标记 */}
-        {initialPoint && (
+        {/* 当前地点标记 */}
+        {currentLocation && (
           <Marker
-            coordinate={initialPoint}
-            title="起点"
-            pinColor="green"
-          />
-        )}
-
-        {/* 终点标记 */}
-        {finalPoint && (
-          <Marker
-            coordinate={finalPoint}
-            title="终点"
-            pinColor="red"
+            coordinate={currentLocation}
+            title="当前位置"
           />
         )}
       </MapView>
+
+      {/* 状态卡片 */}
+      <Animated.View
+        style={[
+          styles.statusCard,
+          {
+            height: cardHeight,
+          },
+        ]}
+        {...panResponder.panHandlers}
+      >
+        <View style={styles.dragIndicator} />
+        <Card.Content>
+          <Text variant="titleLarge">跑步距离</Text>
+          <Text variant="displaySmall">{distance.toFixed(2)} 公里</Text>
+          
+          <Animated.View
+            style={{
+              opacity: cardHeight.interpolate({
+                inputRange: [120, 250],
+                outputRange: [0, 1],
+              }),
+            }}
+          >
+            <TouchableOpacity
+              style={styles.runButton}
+              onPress={handleRunningState}
+            >
+              <Text style={styles.runButtonText}>
+                {isRunning ? '暂停运动' : '开始运动'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* 添加结束运动按钮，仅在暂停状态显示 */}
+            {!isRunning && routeCoordinates.length > 0 && (
+              <TouchableOpacity
+                style={[styles.runButton, styles.endButton]}
+                onPress={handleEndExercise}
+              >
+                <Text style={styles.runButtonText}>结束运动</Text>
+              </TouchableOpacity>
+            )}
+          </Animated.View>
+        </Card.Content>
+      </Animated.View>
     </View>
   );
 };
@@ -200,6 +358,43 @@ const styles = StyleSheet.create({
   map: {
     width: Dimensions.get('window').width,
     height: Dimensions.get('window').height,
+  },
+  statusCard: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    borderRadius: 15,
+    backgroundColor: 'white',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    overflow: 'hidden',
+  },
+  dragIndicator: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#DDDDDD',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginTop: 8,
+  },
+  runButton: {
+    backgroundColor: '#007AFF',
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  runButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   closeButton: {
     position: 'absolute',
@@ -215,6 +410,10 @@ const styles = StyleSheet.create({
   closeButtonText: {
     fontSize: 16,
     color: '#000',
+  },
+  endButton: {
+    backgroundColor: '#FF3B30',
+    marginTop: 10,
   },
 });
 

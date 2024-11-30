@@ -11,7 +11,10 @@ import DiscoveryScreen from '../screens/DiscoveryScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import FreeExerciseScreen from '../screens/FreeExerciseScreen';
 import PEClassesScreen from '../screens/PEClassesScreen';
-import FreeExercise from '../screens/FreeExercise';
+import PresetRoute from '../screens/PresetRoute';
+import Free from '../screens/FreeExercise';
+import ExerciseDetail from '../screens/ExerciseDetail';
+import ExerciseHistory from '../screens/ExerciseHistory';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -128,7 +131,10 @@ export default function AppNavigator() {
         <Stack.Screen name="MainTabs" component={TabNavigator} />
         <Stack.Screen name="FreeExercise" component={FreeExerciseScreen} />
         <Stack.Screen name="PEClasses" component={PEClassesScreen} />
-        <Stack.Screen name="Free" component={FreeExercise} />
+        <Stack.Screen name="PresetRoute" component={PresetRoute} />
+        <Stack.Screen name='Free' component={Free} />
+        <Stack.Screen name='ExerciseDetail' component={ExerciseDetail} />
+        <Stack.Screen name='ExerciseHistory' component={ExerciseHistory} />
       </Stack.Navigator>
     </NavigationContainer>
   );
