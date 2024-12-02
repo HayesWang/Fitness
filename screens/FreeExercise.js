@@ -169,20 +169,25 @@ const FreeExercise = () => {
   // Modify the processing function of the start/pause button
   const handleRunningState = () => {
     if (!isRunning) {
-      // Reset data when starting exercise
-      setRouteCoordinates([]);
-      setDistance(0);
-      setLastValidLocation(null);
-      setLastUpdateTime(null);
-      setStartTime(new Date());
-      setDuration(0);
-      // Automatically collapse the status bar when starting exercise
-      Animated.spring(cardHeight, {
-        toValue: 120,
-        useNativeDriver: false,
-      }).start();
+      // 只有在第一次开始运动时才重置数据
+      if (routeCoordinates.length === 0) {
+        // 首次开始运动
+        setRouteCoordinates([]);
+        setDistance(0);
+        setLastValidLocation(null);
+        setLastUpdateTime(null);
+        setStartTime(new Date());
+        setDuration(0);
+      }
+      // 否则继续使用现有的数据
     }
     setIsRunning(!isRunning);
+    
+    // 自动折叠状态栏
+    Animated.spring(cardHeight, {
+      toValue: 120,
+      useNativeDriver: false,
+    }).start();
   };
 
   // Save exercise record
@@ -315,8 +320,21 @@ const FreeExercise = () => {
       >
         <View style={styles.dragIndicator} />
         <Card.Content>
-          <Text variant="titleLarge">Distance</Text>
-          <Text variant="displaySmall">{distance.toFixed(2)} km</Text>
+          <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <Text variant="titleLarge">距离</Text>
+              <Text variant="displaySmall">{distance.toFixed(2)} km</Text>
+            </View>
+            
+            <View style={styles.statDivider} />
+            
+            <View style={styles.statItem}>
+              <Text variant="titleLarge">用时</Text>
+              <Text variant="displaySmall">
+                {`${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')}`}
+              </Text>
+            </View>
+          </View>
           
           <Animated.View
             style={{
@@ -331,7 +349,7 @@ const FreeExercise = () => {
               onPress={handleRunningState}
             >
               <Text style={styles.runButtonText}>
-                {isRunning ? 'Pause Exercise' : 'Start Exercise'}
+                {isRunning ? '暂停运动' : (routeCoordinates.length > 0 ? '继续运动' : '开始运动')}
               </Text>
             </TouchableOpacity>
 
@@ -414,6 +432,22 @@ const styles = StyleSheet.create({
   endButton: {
     backgroundColor: '#FF3B30',
     marginTop: 10,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statDivider: {
+    width: 1,
+    height: '100%',
+    backgroundColor: '#DDDDDD',
+    marginHorizontal: 10,
   },
 });
 
