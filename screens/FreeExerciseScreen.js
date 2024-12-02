@@ -82,12 +82,12 @@ const styles = StyleSheet.create({
   },
   progressSection: {
     height: 170,
-    width: 393,
+    width: 405,
     flexShrink: 0,
     padding: 20,
     backgroundColor: COLORS.primary,
     borderRadius: 20,
-    marginTop: -60,
+    marginTop: -70,
   },
   cardsContainer: {
     marginTop: 20,

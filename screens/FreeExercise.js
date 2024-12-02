@@ -56,25 +56,24 @@ const FreeExercise = () => {
     let locationSubscription;
 
     const startTracking = async () => {
-      // Request location permission
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Unable to access location data');
+        Alert.alert('权限被拒绝', '无法访问位置信息');
         return;
       }
 
-      // Get current location
+      // 获取初始位置并设置
       const location = await Location.getCurrentPositionAsync({});
       setCurrentLocation(location.coords);
       
-      // Initialize path only when starting exercise
-      if (isRunning) {
+      // 修改：仅在开始运动时初始化路径
+      if (isRunning && routeCoordinates.length === 0) {
         setRouteCoordinates([location.coords]);
       }
 
       locationSubscription = await Location.watchPositionAsync(
         {
-          accuracy: Location.Accuracy.High,
+          accuracy: Location.Accuracy.BestForNavigation,
           timeInterval: 1000,
           distanceInterval: 1,
         },
@@ -82,34 +81,53 @@ const FreeExercise = () => {
           const { latitude, longitude } = newLocation.coords;
           const currentTime = new Date().getTime();
 
-          // Update current location
           setCurrentLocation(newLocation.coords);
+          //console.log('当前位置:', { latitude, longitude });
 
-          // Record trajectory and calculate distance only when exercising
-          if (isRunning && isValidLocationUpdate(newLocation.coords, currentTime)) {
-            setRouteCoordinates(prev => [...prev, newLocation.coords]);
-            
-            if (lastValidLocation) {
-              const newDistance = getDistanceFromLatLonInMeters(
-                lastValidLocation.latitude,
-                lastValidLocation.longitude,
-                latitude,
-                longitude
-              ) / 1000;
-              setDistance(prevDistance => prevDistance + newDistance);
-            }
+          if (isRunning) {
+            setRouteCoordinates(prev => {
+              const newCoords = [...prev, newLocation.coords];
+              //console.log('轨迹坐标数组:', newCoords);
+              
+              // 如果有两个或更多点，计算最新两点之间的距离
+              if (newCoords.length >= 2) {
+                const lastPoint = newCoords[newCoords.length - 2];
+                const newPoint = newCoords[newCoords.length - 1];
+                
+                const segmentDistance = getDistanceFromLatLonInMeters(
+                  lastPoint.latitude,
+                  lastPoint.longitude,
+                  newPoint.latitude,
+                  newPoint.longitude
+                ) / 1000; // 转换为公里
+                
+                //console.log('本段距离(km):', segmentDistance);
+                
+                // 只有当距离大于0.001公里（1米）且小于0.5公里（500米）时才累加
+                // 这可以过滤掉GPS抖动和异常值
+                if (segmentDistance > 0.001 && segmentDistance < 0.5) {
+                  setDistance(prevDistance => {
+                    const newTotalDistance = prevDistance + segmentDistance;
+                    //console.log('总距离(km):', newTotalDistance);
+                    return newTotalDistance;
+                  });
+                }
+              }
+              
+              return newCoords;
+            });
 
             setLastValidLocation(newLocation.coords);
             setLastUpdateTime(currentTime);
           }
 
-          // Map view update
+          // 地图视图更新
           if (mapRef.current) {
             mapRef.current.animateToRegion({
               latitude,
               longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
+              latitudeDelta: 0.005, // 修改：缩小视图范围以更好地显示轨迹
+              longitudeDelta: 0.005,
             }, 500);
           }
         }
@@ -121,7 +139,7 @@ const FreeExercise = () => {
     return () => {
       if (locationSubscription) locationSubscription.remove();
     };
-  }, [lastValidLocation, lastUpdateTime, isRunning]); // Add isRunning as a dependency
+  }, [isRunning]); // 修改：仅依赖 isRunning
 
   // New: Verify whether the location update is valid
   const isValidLocationUpdate = (newCoords, currentTime) => {
@@ -268,14 +286,12 @@ const FreeExercise = () => {
   return (
     <View style={styles.container}>
       {/* Modify the click processing of the return button */}
-      <View style={styles.closeButton}>
-        <TouchableOpacity 
-          onPress={handleGoBack}
-          style={styles.closeButtonTouchable}
-        >
-          <Text style={styles.closeButtonText}>Back</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity 
+        style={styles.backButton}
+        onPress={handleGoBack}
+      >
+        <Text style={styles.backButtonText}>Back</Text>
+      </TouchableOpacity>
 
       {/* Map */}
       <MapView
@@ -284,18 +300,18 @@ const FreeExercise = () => {
         initialRegion={{
           latitude: currentLocation ? currentLocation.latitude : 0,
           longitude: currentLocation ? currentLocation.longitude : 0,
-          latitudeDelta: 0.02,
-          longitudeDelta: 0.02,
+          latitudeDelta: 0.005,
+          longitudeDelta: 0.005,
         }}
         showsUserLocation={true}
         showsMyLocationButton={true}
       >
-        {/* Path drawing */}
-        {routeCoordinates.length > 1 && (
+        {routeCoordinates.length >= 2 && (
           <Polyline
             coordinates={routeCoordinates}
-            strokeWidth={5}
-            strokeColor="blue"
+            strokeWidth={3}
+            strokeColor="#007AFF"
+            lineDashPattern={[0]} // 添加：确保线条为实线
           />
         )}
 
@@ -322,15 +338,13 @@ const FreeExercise = () => {
         <Card.Content>
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
-              <Text variant="titleLarge">Distance</Text>
-              <Text variant="displaySmall">{distance.toFixed(2)} km</Text>
+              <Text style={styles.statTitle}>Distance</Text>
+              <Text style={styles.statValue}>{distance.toFixed(2)} km</Text>
             </View>
             
-            <View style={styles.statDivider} />
-            
             <View style={styles.statItem}>
-              <Text variant="titleLarge">Time</Text>
-              <Text variant="displaySmall">
+              <Text style={styles.statTitle}>Time</Text>
+              <Text style={styles.statValue}>
                 {`${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')}`}
               </Text>
             </View>
@@ -414,21 +428,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  closeButton: {
-    position: 'absolute',
-    right: 15,
-    top: 45,
-    zIndex: 1,
-  },
-  closeButtonTouchable: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    padding: 8,
-    borderRadius: 8,
-  },
-  closeButtonText: {
-    fontSize: 16,
-    color: '#000',
-  },
   endButton: {
     backgroundColor: '#FF3B30',
     marginTop: 10,
@@ -443,11 +442,49 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
   },
+  statTitle: {
+    marginTop: 10,
+    fontSize: 18,
+    color: 'gray',
+    fontWeight: '600',
+    alignSelf: 'left',
+  },
+  statValue: {
+    fontSize: 37,
+    color: '#black',
+    fontWeight: 'bold',
+    alignSelf: 'left',
+  },
   statDivider: {
     width: 1,
     height: '100%',
     backgroundColor: '#DDDDDD',
     marginHorizontal: 10,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    zIndex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 25,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  backButtonText: {
+    fontSize: 18,
+    color: '#666',
+    fontWeight: '500',
   },
 });
 

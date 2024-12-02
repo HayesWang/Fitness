@@ -194,7 +194,7 @@ const FreeExercise = () => {
       );
       const data = await response.json();
 
-      console.log('Google Directions API response:', data); // 打印响应��据
+      console.log('Google Directions API response:', data); // 打印响应据
 
       if (data.routes && data.routes.length > 0) {
         const points = data.routes[0].overview_polyline.points;
@@ -315,17 +315,17 @@ const FreeExercise = () => {
       <View style={styles.closeButton}>
         <TouchableOpacity 
           onPress={() => {
-            if (isRunning || startTime) {  // 如果正在运动或已开始运动
+            if (isRunning || startTime) {
               Alert.alert(
-                'Confirm Exit',
-                'Exercise in progress, are you sure to exit?',
+                '确认退出',
+                '运动正在进行中，确定要退出吗？',
                 [
                   {
-                    text: 'Cancel',
+                    text: '取消',
                     style: 'cancel'
                   },
                   {
-                    text: 'Confirm',
+                    text: '确认',
                     onPress: () => navigation.goBack(),
                     style: 'destructive'
                   }
@@ -375,7 +375,7 @@ const FreeExercise = () => {
           // 跳过起点和终点
           if (index === 0 || index === fullRouteCoordinates.length - 1) return null;
           // 每隔一定数量的点绘制一个标记
-          if (index % 2 === 0) {
+          if (index % 6 === 0) {
             return (
               <Marker
                 key={index}
@@ -504,18 +504,28 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: 'absolute',
-    right: 15,
+    left: 15,
     top: 45,
     zIndex: 1,
   },
   closeButtonTouchable: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    padding: 8,
-    borderRadius: 8,
+    backgroundColor: '#fff',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   closeButtonText: {
-    fontSize: 16,
-    color: '#000',
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#333',
   },
   statusCard: {
     position: 'absolute',
