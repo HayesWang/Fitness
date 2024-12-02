@@ -88,7 +88,7 @@ const FreeExercise = () => {
             setFullRouteCoordinates(finalRoute.coordinates);
             setIsFinalRoute(true); // 显示最终路径
           } else {
-            Alert.alert('路径计算失败', '无法生成最终路径');
+            Alert.alert('Route calculation failed', 'Cannot generate final route');
           }
         }
         return;
@@ -98,7 +98,7 @@ const FreeExercise = () => {
         // 初始获取位置
         let { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
-          Alert.alert('权限被拒绝', '无法访问位置数据');
+          Alert.alert('Permission denied', 'Cannot access location data');
           return;
         }
         const location = await Location.getCurrentPositionAsync({});
@@ -110,7 +110,7 @@ const FreeExercise = () => {
           setFullRouteCoordinates(directions.coordinates); // 初始化完整路径
           setRepeatCount(repeatCount + 1); // 启动下一段路径
         } else {
-          Alert.alert('路径生成失败', '无法找到有效路径');
+          Alert.alert('Route generation failed', 'Cannot find valid route');
         }
       } else {
         // 使用上次终点作为下一次路径的起点
@@ -121,7 +121,7 @@ const FreeExercise = () => {
           setFinalPoint(lastEndpoint); // 更新最终终点
           setRepeatCount(repeatCount + 1); // 启动下一段路径
         } else {
-          Alert.alert('路径生成失败', '无法找到有效路径');
+          Alert.alert('Route generation failed', 'Cannot find valid route');
         }
       }
     };
@@ -194,7 +194,7 @@ const FreeExercise = () => {
       );
       const data = await response.json();
 
-      console.log('Google Directions API response:', data); // 打印响应数据
+      console.log('Google Directions API response:', data); // 打印响应��据
 
       if (data.routes && data.routes.length > 0) {
         const points = data.routes[0].overview_polyline.points;
@@ -204,11 +204,11 @@ const FreeExercise = () => {
         }));
         return { coordinates };
       } else {
-        Alert.alert('无可用路线', '请检查起点和终点是否有效');
+        Alert.alert('No routes available', 'Please check if start and end points are valid');
         return null;
       }
     } catch (error) {
-      Alert.alert('错误', '获取路径数据失败，请稍后重试');
+      Alert.alert('Error', 'Failed to fetch route data, please try again');
       console.error('Error fetching route:', error);
       return null;
     }
@@ -233,11 +233,11 @@ const FreeExercise = () => {
         }));
         return { coordinates };
       } else {
-        Alert.alert('无法生成最终路径', '请检查起点和终点是否有效');
+        Alert.alert('Cannot generate final route', 'Please check if start and end points are valid');
         return null;
       }
     } catch (error) {
-      Alert.alert('错误', '获取最终路径失败，请稍后重试');
+      Alert.alert('Error', 'Failed to fetch final route, please try again');
       console.error('Error fetching final route:', error);
       return null;
     }
@@ -248,7 +248,7 @@ const FreeExercise = () => {
     const getInitialLocation = async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('权限被拒绝', '无法访问位置数据');
+        Alert.alert('Permission denied', 'Cannot access location data');
         return;
       }
 
@@ -305,7 +305,7 @@ const FreeExercise = () => {
       navigation.navigate('ExerciseHistory');
     } catch (error) {
       console.error('保存运动记录失败:', error);
-      Alert.alert('错误', '保存运动记录失败');
+      Alert.alert('Error', 'Failed to save exercise record');
     }
   };
 
@@ -317,15 +317,15 @@ const FreeExercise = () => {
           onPress={() => {
             if (isRunning || startTime) {  // 如果正在运动或已开始运动
               Alert.alert(
-                '确认返回',
-                '运动正在进行中，确定要退出吗？',
+                'Confirm Exit',
+                'Exercise in progress, are you sure to exit?',
                 [
                   {
-                    text: '取消',
+                    text: 'Cancel',
                     style: 'cancel'
                   },
                   {
-                    text: '确定',
+                    text: 'Confirm',
                     onPress: () => navigation.goBack(),
                     style: 'destructive'
                   }
@@ -337,7 +337,7 @@ const FreeExercise = () => {
           }}
           style={styles.closeButtonTouchable}
         >
-          <Text style={styles.closeButtonText}>返回</Text>
+          <Text style={styles.closeButtonText}>Back</Text>
         </TouchableOpacity>
       </View>
 
@@ -427,18 +427,18 @@ const FreeExercise = () => {
       >
         <View style={styles.dragIndicator} />
         <Card.Content>
-          <Text style={styles.titleText}>运动数据</Text>
+          <Text style={styles.titleText}>Exercise Data</Text>
           <View style={styles.dataContainer}>
             <View style={styles.dataRow}>
               <View>
                 <Text style={styles.distanceText}>{distance.toFixed(2)} km</Text>
-                <Text style={styles.pointsText}>已通过 {passedPoints} 个标记点</Text>
+                <Text style={styles.pointsText}>Passed {passedPoints} checkpoints</Text>
               </View>
               <View style={styles.durationContainer}>
                 <Text style={styles.durationText}>
                   {Math.floor(duration / 60)}:{(duration % 60).toString().padStart(2, '0')}
                 </Text>
-                <Text style={styles.durationLabel}>用时</Text>
+                <Text style={styles.durationLabel}>Duration</Text>
               </View>
             </View>
           </View>
@@ -456,7 +456,7 @@ const FreeExercise = () => {
               onPress={handleRunningState}
             >
               <Text style={styles.runButtonText}>
-                {isRunning ? '暂停运动' : (startTime ? '继续运动' : '开始运动')}
+                {isRunning ? 'Pause Exercise' : (startTime ? 'Resume Exercise' : 'Start Exercise')}
               </Text>
             </TouchableOpacity>
 
@@ -466,15 +466,15 @@ const FreeExercise = () => {
                 style={[styles.runButton, styles.endButton]}
                 onPress={() => {
                   Alert.alert(
-                    '结束运动',
-                    '确定要结束本次运动吗？',
+                    'End Exercise',
+                    'Are you sure to end this exercise?',
                     [
                       {
-                        text: '取消',
+                        text: 'Cancel',
                         style: 'cancel'
                       },
                       {
-                        text: '保存并结束',
+                        text: 'Save and End',
                         onPress: async () => {
                           setIsRunning(false);
                           await saveExerciseRecord();
@@ -484,7 +484,7 @@ const FreeExercise = () => {
                   );
                 }}
               >
-                <Text style={styles.runButtonText}>结束运动</Text>
+                <Text style={styles.runButtonText}>End Exercise</Text>
               </TouchableOpacity>
             )}
           </Animated.View>

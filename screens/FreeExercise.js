@@ -322,14 +322,14 @@ const FreeExercise = () => {
         <Card.Content>
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
-              <Text variant="titleLarge">距离</Text>
+              <Text variant="titleLarge">Distance</Text>
               <Text variant="displaySmall">{distance.toFixed(2)} km</Text>
             </View>
             
             <View style={styles.statDivider} />
             
             <View style={styles.statItem}>
-              <Text variant="titleLarge">用时</Text>
+              <Text variant="titleLarge">Time</Text>
               <Text variant="displaySmall">
                 {`${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')}`}
               </Text>
@@ -349,7 +349,7 @@ const FreeExercise = () => {
               onPress={handleRunningState}
             >
               <Text style={styles.runButtonText}>
-                {isRunning ? '暂停运动' : (routeCoordinates.length > 0 ? '继续运动' : '开始运动')}
+                {isRunning ? 'Pause Exercise' : (routeCoordinates.length > 0 ? 'Resume Exercise' : 'Start Exercise')}
               </Text>
             </TouchableOpacity>
 
