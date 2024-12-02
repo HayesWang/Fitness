@@ -24,7 +24,13 @@ const ExerciseHistory = ({ navigation }) => {
   };
 
   const groupRecordsByMonth = (records) => {
-    return records.reduce((groups, record) => {
+    const sortedRecords = [...records].sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return dateB - dateA;
+    });
+    
+    return sortedRecords.reduce((groups, record) => {
       const date = new Date(record.date);
       const monthKey = `${date.getFullYear()}年${date.getMonth() + 1}月`;
       if (!groups[monthKey]) {
@@ -129,9 +135,9 @@ const ExerciseHistory = ({ navigation }) => {
           onPress={() => navigation.navigate('MainTabs')}
           style={styles.backButton}
         >
-          <Text style={styles.backButtonText}>{'< '}返回</Text>
+          <Text style={styles.backButtonText}>{'< '}Back</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>运动历史</Text>
+        <Text style={styles.headerTitle}>Exercise History</Text>
       </View>
       <TouchableOpacity 
         onLongPress={handleLongPress}
@@ -141,7 +147,14 @@ const ExerciseHistory = ({ navigation }) => {
       >
         <ScrollView contentContainerStyle={styles.listContainer}>
           {Object.entries(groupedRecords)
-            .sort((a, b) => b[0].localeCompare(a[0]))
+            .sort((a, b) => {
+              const [yearA, monthA] = a[0].match(/(\d+)年(\d+)月/).slice(1).map(Number);
+              const [yearB, monthB] = b[0].match(/(\d+)年(\d+)月/).slice(1).map(Number);
+              if (yearA !== yearB) {
+                return yearB - yearA;
+              }
+              return monthB - monthA;
+            })
             .map(renderMonthSection)}
         </ScrollView>
       </TouchableOpacity>

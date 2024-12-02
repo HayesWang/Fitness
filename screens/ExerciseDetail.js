@@ -6,16 +6,37 @@ import MapView, { Polyline, Marker } from 'react-native-maps';
 const ExerciseDetail = ({ route, navigation }) => {
   const { record } = route.params;
 
+  // 计算路线的边界范围
+  const getRegionForRoute = (coordinates) => {
+    let minLat = coordinates[0].latitude;
+    let maxLat = coordinates[0].latitude;
+    let minLng = coordinates[0].longitude;
+    let maxLng = coordinates[0].longitude;
+
+    coordinates.forEach(coord => {
+      minLat = Math.min(minLat, coord.latitude);
+      maxLat = Math.max(maxLat, coord.latitude);
+      minLng = Math.min(minLng, coord.longitude);
+      maxLng = Math.max(maxLng, coord.longitude);
+    });
+
+    const padding = 1.5; // 添加10%的边距
+    const latDelta = (maxLat - minLat) * padding;
+    const lngDelta = (maxLng - minLng) * padding;
+
+    return {
+      latitude: (minLat + maxLat) / 2,
+      longitude: (minLng + maxLng) / 2,
+      latitudeDelta: Math.max(latDelta, 0.002), // 设置最小缩放级别
+      longitudeDelta: Math.max(lngDelta, 0.002),
+    };
+  };
+
   return (
     <View style={styles.container}>
       <MapView
         style={styles.fullScreenMap}
-        initialRegion={{
-          latitude: record.route[0].latitude,
-          longitude: record.route[0].longitude,
-          latitudeDelta: 0.02,
-          longitudeDelta: 0.02,
-        }}
+        initialRegion={getRegionForRoute(record.route)}
       >
         <Polyline
           coordinates={record.route}

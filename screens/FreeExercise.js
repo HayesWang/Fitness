@@ -314,14 +314,6 @@ const FreeExercise = () => {
             lineDashPattern={[0]} // 添加：确保线条为实线
           />
         )}
-
-        {/* Current location marker */}
-        {currentLocation && (
-          <Marker
-            coordinate={currentLocation}
-            title="Current Location"
-          />
-        )}
       </MapView>
 
       {/* Status card */}
