@@ -22,6 +22,8 @@ const FreeExercise = () => {
   const [passedPoints, setPassedPoints] = useState(0); // 添加已通过标记点计数
   const [startTime, setStartTime] = useState(null);
   const [duration, setDuration] = useState(0);
+  const [userTrack, setUserTrack] = useState([]); // 用户实际运动轨迹
+  const locationSubscription = useRef(null); // 位置监听器引用
 
   // 添加状态栏高度动画值
   const cardHeight = useRef(new Animated.Value(120)).current;
@@ -49,11 +51,39 @@ const FreeExercise = () => {
   // 修改处理开始/暂停运动的函数
   const handleRunningState = () => {
     if (!isRunning) {
-      // 如果是第一次开始运动
       if (!startTime) {
         setStartTime(new Date());
         setRepeatCount(1);
+        setUserTrack([]); // 重置轨迹
       }
+      
+      // 开始追踪位置
+      locationSubscription.current = Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.High,
+          timeInterval: 1000,
+          distanceInterval: 1
+        },
+        (location) => {
+          setCurrentLocation(location.coords);
+          setUserTrack(prev => {
+            const newTrack = [...prev, location.coords];
+            // 计算新增的距离
+            if (prev.length > 0) {
+              const lastPoint = prev[prev.length - 1];
+              const newDistance = getDistanceFromLatLonInMeters(
+                lastPoint.latitude,
+                lastPoint.longitude,
+                location.coords.latitude,
+                location.coords.longitude
+              ) / 1000; // 转换为公里
+              setDistance(d => d + newDistance);
+            }
+            return newTrack;
+          });
+        }
+      );
+      
       // 开始运动时放大地图视图
       if (mapRef.current && currentLocation) {
         mapRef.current.animateToRegion({
@@ -71,6 +101,10 @@ const FreeExercise = () => {
       
       setIsRunning(true);
     } else {
+      // 停止位置追踪
+      if (locationSubscription.current) {
+        locationSubscription.current.then(subscription => subscription.remove());
+      }
       setIsRunning(false);
     }
   };
@@ -317,15 +351,15 @@ const FreeExercise = () => {
           onPress={() => {
             if (isRunning || startTime) {
               Alert.alert(
-                '确认退出',
-                '运动正在进行中，确定要退出吗？',
+                'Confirm Exit',
+                'Exercise in progress, are you sure to exit?',
                 [
                   {
-                    text: '取消',
+                    text: 'Cancel',
                     style: 'cancel'
                   },
                   {
-                    text: '确认',
+                    text: 'Confirm',
                     onPress: () => navigation.goBack(),
                     style: 'destructive'
                   }
@@ -400,7 +434,7 @@ const FreeExercise = () => {
         {initialPoint && (
           <Marker
             coordinate={initialPoint}
-            title="起点"
+            title="Start"
             pinColor="green"
           />
         )}
@@ -409,8 +443,17 @@ const FreeExercise = () => {
         {finalPoint && (
           <Marker
             coordinate={finalPoint}
-            title="终点"
+            title="End"
             pinColor="red"
+          />
+        )}
+
+        {/* 添加用户实际运动轨迹 */}
+        {userTrack.length > 1 && (
+          <Polyline
+            coordinates={userTrack}
+            strokeWidth={4}
+            strokeColor="red"
           />
         )}
       </MapView>
