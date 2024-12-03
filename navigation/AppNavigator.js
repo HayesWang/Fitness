@@ -15,6 +15,8 @@ import PresetRoute from '../screens/PresetRoute';
 import Free from '../screens/FreeExercise';
 import ExerciseDetail from '../screens/ExerciseDetail';
 import ExerciseHistory from '../screens/ExerciseHistory';
+import CheckInScreen from '../screens/CheckInScreen';
+
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -135,6 +137,8 @@ export default function AppNavigator() {
         <Stack.Screen name='Free' component={Free} />
         <Stack.Screen name='ExerciseDetail' component={ExerciseDetail} />
         <Stack.Screen name='ExerciseHistory' component={ExerciseHistory} />
+        <Stack.Screen name="CheckIn" component={CheckInScreen} />
+
       </Stack.Navigator>
     </NavigationContainer>
   );
