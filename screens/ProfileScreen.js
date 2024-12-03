@@ -1,102 +1,193 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
-import { LineChart } from 'react-native-chart-kit';
-import { Dimensions } from 'react-native';
 
-const screenWidth = Dimensions.get('window').width;
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, Dimensions, ScrollView } from 'react-native';
+import { COLORS, SIZES } from '../constants/assets';
+import { LineChart, BarChart } from 'react-native-chart-kit';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function ProfileScreen() {
-  const chartConfig = {
-    backgroundGradientFrom: '#fff',
-    backgroundGradientTo: '#fff',
-    color: (opacity = 1) => `rgba(0, 0, 255, ${opacity})`,
-    strokeWidth: 2, // optional, default 3
-    useShadowColorFromDataset: false,
+export default function ProfileScreen({ navigation }) {
+  const screenWidth = Dimensions.get('window').width;
+  const [monthlyData, setMonthlyData] = useState({
+    labels: [],
+    counts: [],
+    distances: []
+  });
+
+  useEffect(() => {
+    loadExerciseData();
+  }, []);
+
+  const loadExerciseData = async () => {
+    try {
+      const records = await AsyncStorage.getItem('exerciseRecords');
+      if (records) {
+        const exerciseRecords = JSON.parse(records);
+        const monthlyStats = calculateMonthlyStats(exerciseRecords);
+        
+        setMonthlyData({
+          labels: monthlyStats.map(item => `${item.month}月`),
+          counts: monthlyStats.map(item => item.count),
+          distances: monthlyStats.map(item => item.distance)
+        });
+      }
+    } catch (error) {
+      console.error('加载运动记录失败:', error);
+    }
   };
 
-  const data = {
-    labels: ['8', '9', '10', '11', '12', '1', '2'],
-    datasets: [
-      {
-        data: [6, 9, 7, 12, 8, 5],
-        color: (opacity = 1) => `rgba(0, 123, 255, ${opacity})`, // optional
-        strokeWidth: 2,
-      },
-    ],
+  const calculateMonthlyStats = (records) => {
+    const months = [];
+    const today = new Date();
+    
+    for (let i = 5; i >= 0; i--) {
+      const month = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      months.push({
+        month: month.getMonth() + 1,
+        year: month.getFullYear(),
+        count: 0,
+        distance: 0
+      });
+    }
+
+    records.forEach(record => {
+      const recordDate = new Date(record.date);
+      const monthStats = months.find(m => 
+        m.month === (recordDate.getMonth() + 1) && 
+        m.year === recordDate.getFullYear()
+      );
+      if (monthStats) {
+        monthStats.count += 1;
+        monthStats.distance += record.distance;
+      }
+    });
+
+    return months.map(m => ({
+      month: m.month,
+      count: m.count,
+      distance: Math.round(m.distance * 10) / 10
+    }));
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
-        {/* Profile Section */}
-        <View style={styles.profileSection}>
-          {/* User Avatar */}
-          <View style={styles.profileImagePlaceholder}>
-            <Text style={styles.imageText}>Avatar</Text>
-          </View>
-          <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>Student: Xiaoming Wang</Text>
-            <Text style={styles.profileDept}>School of Design and Innovation</Text>
-          </View>
+      {/* Profile Section */}
+      <View style={styles.profileSection}>
+        <Image
+          style={styles.avatar}
+          source={require('../assets/avatar.png')}
+        />
+        <View style={styles.userInfo}>
+          <Text style={styles.userName}>Username</Text>
+          <Text style={styles.userStats}>Total Exercise Time: 120h</Text>
         </View>
-
-        {/* Line Chart */}
-        <View style={styles.chartSection}>
-          <Text style={styles.chartTitle}>2023-2024 Academic Year, Semester 1</Text>
-          <LineChart
-            data={data}
-            width={screenWidth - 40}
-            height={220}
-            chartConfig={chartConfig}
-            bezier
-            style={styles.chart}
-          />
-        </View>
-
-        {/* Stats Section */}
-        <View style={styles.statsSection}>
-          <View style={styles.statBox}>
-            <Text style={styles.statNumber}>21</Text>
-            <Text style={styles.statLabel}>Valid Workouts This Semester</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statNumber}>4</Text>
-            <Text style={styles.statLabel}>Average Workouts Per Month</Text>
-          </View>
-        </View>
-
-        {/* Running Records */}
-        <View style={styles.recordsSection}>
-          <View style={styles.record}>
-            <Text style={styles.recordDate}>2023.11.09</Text>
-            <Text style={styles.recordDistance}>2.04 km</Text>
-            <Text style={styles.recordTime}>00:11:23</Text>
-            <Text style={[styles.recordStatus, styles.statusValid]}>Valid</Text>
-          </View>
-          <View style={styles.record}>
-            <Text style={styles.recordDate}>2023.11.09</Text>
-            <Text style={styles.recordDistance}>2.04 km</Text>
-            <Text style={styles.recordTime}>00:11:23</Text>
-            <Text style={[styles.recordStatus, styles.statusInvalid]}>Invalid</Text>
-          </View>
-          <View style={styles.record}>
-            <Text style={styles.recordDate}>2023.11.09</Text>
-            <Text style={styles.recordDistance}>2.04 km</Text>
-            <Text style={styles.recordTime}>00:11:23</Text>
-            <Text style={[styles.recordStatus, styles.statusPending]}>Pending</Text>
-          </View>
-        </View>
-      </ScrollView>
-
-      {/* Bottom Navigation Bar */}
-      <View style={styles.navbar}>
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navText}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navText}>Profile</Text>
-        </TouchableOpacity>
       </View>
+
+      {/* Statistics Charts */}
+      <View style={styles.chartContainer}>
+        <Text style={styles.chartTitle}>Monthly Exercise Statistics</Text>
+        {monthlyData.labels.length > 0 ? (
+          <>
+            <ScrollView 
+              horizontal 
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              style={styles.chartScroll}
+              snapToInterval={screenWidth}
+              decelerationRate="fast"
+            >
+              {/* Exercise Count Chart */}
+              <View style={[styles.chartWrapper, { width: screenWidth }]}>
+                <BarChart
+                  data={{
+                    labels: monthlyData.labels.map(label => 
+                      label.replace('月', '')  // Remove Chinese character
+                    ),
+                    datasets: [{
+                      data: monthlyData.counts
+                    }]
+                  }}
+                  width={screenWidth - 40}
+                  height={200}
+                  yAxisLabel=""
+                  chartConfig={{
+                    backgroundColor: '#ffffff',
+                    backgroundGradientFrom: '#ffffff',
+                    backgroundGradientTo: '#ffffff',
+                    decimalPlaces: 0,
+                    color: (opacity = 1) => `rgba(75, 107, 245, ${opacity})`,
+                    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                    style: {
+                      borderRadius: 16,
+                    },
+                    barPercentage: 0.7,
+                  }}
+                  style={{
+                    marginVertical: 8,
+                    borderRadius: 16,
+                  }}
+                  showValuesOnTopOfBars={true}
+                />
+                <Text style={styles.chartLegend}>Exercise Count (Times)</Text>
+              </View>
+
+              {/* Distance Chart */}
+              <View style={[styles.chartWrapper, { width: screenWidth }]}>
+                <LineChart
+                  data={{
+                    labels: monthlyData.labels.map(label => 
+                      label.replace('月', '')  // Remove Chinese character
+                    ),
+                    datasets: [{
+                      data: monthlyData.distances
+                    }]
+                  }}
+                  width={screenWidth - 40}
+                  height={200}
+                  yAxisLabel=""
+                  yAxisSuffix="km"
+                  chartConfig={{
+                    backgroundColor: '#ffffff',
+                    backgroundGradientFrom: '#ffffff',
+                    backgroundGradientTo: '#ffffff',
+                    decimalPlaces: 1,
+                    color: (opacity = 1) => `rgba(255, 72, 66, ${opacity})`,
+                    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                    style: {
+                      borderRadius: 16,
+                    },
+                    propsForDots: {
+                      r: "4",
+                      strokeWidth: "2",
+                      stroke: "#fff"
+                    }
+                  }}
+                  style={{
+                    marginVertical: 8,
+                    borderRadius: 16,
+                  }}
+                  bezier
+                />
+                <Text style={styles.chartLegend}>Exercise Distance (km)</Text>
+              </View>
+            </ScrollView>
+
+            <View style={styles.paginationDots}>
+              <View style={[styles.dot, styles.dotActive]} />
+              <View style={styles.dot} />
+            </View>
+          </>
+        ) : (
+          <Text style={styles.noDataText}>No exercise data available</Text>
+        )}
+      </View>
+
+      {/* Exercise History Button */}
+      <TouchableOpacity 
+        style={styles.button}
+        onPress={() => navigation.navigate('ExerciseHistory')}
+      >
+        <Text style={styles.buttonText}>Exercise History</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -145,76 +236,92 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
   },
-  chart: {
-    borderRadius: 10,
-  },
-  statsSection: {
+  profileSection: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 20,
-    backgroundColor: '#fff',
-    marginVertical: 10,
-  },
-  statBox: {
+    padding: SIZES.padding.large,
     alignItems: 'center',
   },
-  statNumber: {
-    fontSize: 24,
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+  },
+  userInfo: {
+    marginLeft: SIZES.padding.medium,
+  },
+  userName: {
+    fontSize: SIZES.fontSize.large,
     fontWeight: 'bold',
-    color: '#000',
+    color: COLORS.text.primary,
   },
-  statLabel: {
-    fontSize: 14,
-    color: '#666',
+  userStats: {
+    fontSize: SIZES.fontSize.medium,
+    color: COLORS.text.secondary,
+    marginTop: 4,
   },
-  recordsSection: {
-    padding: 20,
-    backgroundColor: '#fff',
-    marginVertical: 10,
+  chartContainer: {
+    padding: SIZES.padding.medium,
+    backgroundColor: COLORS.white,
+    margin: SIZES.padding.medium,
+    borderRadius: 12,
+    overflow: 'hidden',
   },
-  record: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 15,
+  chartTitle: {
+    fontSize: SIZES.fontSize.medium,
+    fontWeight: '600',
+    color: COLORS.text.primary,
+    marginBottom: SIZES.padding.medium,
   },
-  recordDate: {
-    fontSize: 14,
-    color: '#333',
-  },
-  recordDistance: {
-    fontSize: 14,
-    color: '#333',
-  },
-  recordTime: {
-    fontSize: 14,
-    color: '#333',
-  },
-  recordStatus: {
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  statusValid: {
-    color: 'green',
-  },
-  statusInvalid: {
-    color: 'red',
-  },
-  statusPending: {
-    color: 'orange',
-  },
-  navbar: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: 10,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderColor: '#ddd',
-  },
-  navItem: {
+  button: {
+    backgroundColor: COLORS.primary,
+    padding: SIZES.padding.medium,
+    borderRadius: 8,
+    marginHorizontal: SIZES.padding.large,
     alignItems: 'center',
+    marginTop: SIZES.padding.large,
   },
-  navText: {
-    fontSize: 14,
-    color: '#333',
+  buttonText: {
+    color: COLORS.white,
+    fontSize: SIZES.fontSize.medium,
+    fontWeight: '600',
+  },
+  noDataText: {
+    textAlign: 'center',
+    marginVertical: 20,
+    color: COLORS.text.secondary,
+  },
+  chartLegend: {
+    textAlign: 'center',
+    color: COLORS.text.secondary,
+    fontSize: SIZES.fontSize.small,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  chartScroll: {
+    marginHorizontal: -16,
+  },
+  chartWrapper: {
+    paddingHorizontal: 16,
+    backgroundColor: COLORS.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  paginationDots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#D9D9D9',
+    marginHorizontal: 4,
+  },
+  dotActive: {
+    backgroundColor: COLORS.primary,
+    width: 16,
   },
 });
