@@ -16,6 +16,7 @@ import Free from '../screens/FreeExercise';
 import ExerciseDetail from '../screens/ExerciseDetail';
 import ExerciseHistory from '../screens/ExerciseHistory';
 import CheckInScreen from '../screens/CheckInScreen';
+import AdviceScreen from '../screens/AdviceScreen';
 
 
 const Stack = createNativeStackNavigator();
@@ -138,7 +139,7 @@ export default function AppNavigator() {
         <Stack.Screen name='ExerciseDetail' component={ExerciseDetail} />
         <Stack.Screen name='ExerciseHistory' component={ExerciseHistory} />
         <Stack.Screen name="CheckIn" component={CheckInScreen} />
-
+        <Stack.Screen name="Advice" component={AdviceScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
