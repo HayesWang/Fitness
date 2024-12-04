@@ -61,6 +61,8 @@ export default function HomeScreen() {
       navigation.navigate('FreeExercise');
     } else if (buttonType === 'schedule') {
       navigation.navigate('PEClasses');
+    } else if (buttonType === 'advice') {
+      navigation.navigate('Advice');
     }
     // 可以在这里添加其他按钮类型的处理
   };
@@ -168,7 +170,7 @@ export default function HomeScreen() {
         <TouchableOpacity style={styles.actionButton}>
           <Text style={styles.actionText}>Class Check-in</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
+        <TouchableOpacity style={styles.actionButton} onPress={() => handleCardPress('advice')}>
           <Text style={styles.actionText}>Advice</Text>
         </TouchableOpacity>
       </ScrollView>
