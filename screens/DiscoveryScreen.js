@@ -1,5 +1,7 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Image, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, TextInput } from 'react-native';
+
 import { COLORS, SIZES } from '../constants/assets';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
@@ -240,8 +242,9 @@ export default function DiscoveryScreen() {
   );
 }
 
+
 const styles = StyleSheet.create({
-  container: {
+container: {
     flex: 1,
     backgroundColor: COLORS.secondary,
     justifyContent: 'flex-start', // 确保顶部有空间
@@ -456,5 +459,104 @@ const styles = StyleSheet.create({
     marginTop: 10,
     //marginBottom: 50,
 
+  },
+  tabWrapper: {
+    position: 'absolute',  // 确保 Tab 导航部分位置固定
+    bottom: 0,  // 定位到屏幕底部
+    left: '5%',  // 居中调整 Tab 导航栏
+    right: '5%',
+  },
+  pageContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    padding: 20,
+  },
+
+  postContainer: {
+    width: 390, // 不知道为什么100%有问题，这里卡片宽度直接设置为390
+    backgroundColor: '#fff',
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd', // 添加边框
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  avatar: {
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
+    marginRight: 10,
+  },
+  postID: {
+    fontSize: 14,
+    color: '#666',
+  },
+  followButton: {
+    marginLeft: 'auto', // 将按钮推到右侧
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    borderRadius: 20,
+  },
+  followButtonText: {
+    color: COLORS.primary,
+    fontSize: 14,
+  },
+  followedButton: {
+    backgroundColor: '#ddd',  // 按钮背景变灰
+    borderColor: '#ddd',  // 边框变灰
+  },
+  followedText: {
+    color: '#666',  // 字体变灰
+  },
+  postTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.text.primary,
+  },
+  postDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 10,
+  },
+  imageContainer: {
+    width: '100%',
+    height: 200,
+    backgroundColor: '#ddd', // 背景色灰色，位置留给图片
+    marginBottom: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  postImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end', // 将图标集中到右侧
+    alignItems: 'flex-end', // 将图标垂直对齐到底部
+    marginTop: 10,
+    gap: 15,  // 添加图标之间的间距
+  },
+  iconContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  icon: {
+    width: 24,
+    height: 24,
+    marginRight: 5,
+  },
+  iconText: {
+    fontSize: 14,
+    color: '#666',
   },
 });
