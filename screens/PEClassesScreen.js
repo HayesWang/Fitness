@@ -139,7 +139,7 @@ const PEClassesScreen = () => {
     {month: 10, date: 25},
     {month: 10, date: 29},
     // 12月课
-    {month: 11, date: 5},
+    {month: 11, date: 6},
     {month: 11, date: 11},
     {month: 11, date: 17},
     {month: 11, date: 27},

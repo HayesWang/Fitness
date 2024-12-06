@@ -397,8 +397,8 @@ const styles = StyleSheet.create({
   },
   userMessage: {
     alignSelf: 'flex-end',
-    backgroundColor: COLORS.primary,
-    opacity: 0.8,
+    backgroundColor: '#C5D9F2',
+    opacity: 1,
   },
   aiMessage: {
     alignSelf: 'flex-start',
