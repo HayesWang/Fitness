@@ -1,10 +1,30 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, Modal, Animated, ScrollView, Dimensions } from 'react-native';
-import { IMAGES, COLORS, SIZES } from '../constants/assets';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, Modal, Animated, ScrollView, Dimensions, Alert } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import * as SplashScreen from 'expo-splash-screen';
 import { useFonts, Rubik_400Regular, Rubik_800ExtraBold_Italic, Rubik_500Medium_Italic, Rubik_600SemiBold_Italic } from '@expo-google-fonts/rubik';
 import { RubikMonoOne_400Regular } from '@expo-google-fonts/rubik-mono-one';
-import * as SplashScreen from 'expo-splash-screen';
-import { useNavigation } from '@react-navigation/native';
+import { IMAGES, COLORS, SIZES } from '../constants/assets';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// 假设有一个函数来检查用户的登录状态
+const isUserLoggedIn = async () => {
+  try {
+    const status = await AsyncStorage.getItem('isLoggedIn');
+    return status === 'true';
+  } catch (error) {
+    console.error('获取登录状态失败:', error);
+    return false;
+  }
+};
+
+const setLoginStatus = async (isLoggedIn) => {
+  try {
+    await AsyncStorage.setItem('isLoggedIn', JSON.stringify(isLoggedIn));
+  } catch (error) {
+    console.error('存储登录状态失败:', error);
+  }
+};
 
 // Progress Bar Component
 const ProgressBar = ({ progress, total, color }) => {
@@ -38,6 +58,19 @@ export default function HomeScreen() {
     }
   }, [fontsLoaded]);
 
+  useFocusEffect(
+    useCallback(() => {
+      const checkLoginStatus = async () => {
+        const loggedIn = await isUserLoggedIn();
+        if (!loggedIn) {
+          navigation.navigate('Login'); // 跳转到 LoginScreen
+        }
+      };
+
+      checkLoginStatus();
+    }, [navigation])
+  );
+
   const showModal = () => {
     setModalVisible(true);
     Animated.spring(slideAnim, {
@@ -69,6 +102,27 @@ export default function HomeScreen() {
 
   const handlePEClassesPress = () => {
     navigation.navigate('PEClasses');
+  };
+
+  const handleNotificationPress = () => {
+    Alert.alert(
+      '注销',
+      '确定要注销吗？',
+      [
+        {
+          text: '取消',
+          style: 'cancel',
+        },
+        {
+          text: '确定',
+          onPress: async () => {
+            await setLoginStatus(false); // 设置登录状态为未登录
+            navigation.navigate('Login'); // 跳转到 LoginScreen
+          },
+          style: 'destructive',
+        },
+      ]
+    );
   };
 
   const cardsData = [
@@ -131,7 +185,7 @@ export default function HomeScreen() {
             <Text style={styles.username}>Wang Xiaoming</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.notificationButton}>
+        <TouchableOpacity style={styles.notificationButton} onPress={handleNotificationPress}>
           <Image 
             source={IMAGES.notification} 
             style={styles.notificationIcon}

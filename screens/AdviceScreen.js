@@ -154,7 +154,7 @@ export default function AdviceScreen() {
       const messages = [
         { 
           role: 'system', 
-          content: 'Please provide four exercise suggestions, each with a "Title" and "Content" field, content field should be less than 20 characters, returned as a JSON array. For example: [{"Title": "Drink more water", "Content": "Drink at least 8 cups of water daily."}, ...]' 
+          content: 'Please provide 4 exercise AND after exercise suggestions (maybe include nutrition, diet, recovery and what else exercise related), each with a "Title" and "Content" field, content field should be less than 20 characters, returned as a JSON array. For example: [{"Title": "Drink more water", "Content": "Drink at least 8 cups of water daily."}, ...]' 
         },
         { role: 'user', content: JSON.stringify(userExerciseData) }
       ];
