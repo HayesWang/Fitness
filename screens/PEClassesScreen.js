@@ -139,8 +139,8 @@ const PEClassesScreen = () => {
     {month: 10, date: 25},
     {month: 10, date: 29},
     // 12月课
-    {month: 11, date: 6},
-    {month: 11, date: 11},
+    {month: 11, date: 3},
+    {month: 11, date: 8},
     {month: 11, date: 17},
     {month: 11, date: 27},
     // 1月课程
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
   cardContainer: {
     flex: 1,
     width: '87%',
-    maxHeight: '88%',
+    maxHeight: '93%',
     marginTop: 60,
     margin: 20,
     backgroundColor: '#fff',
@@ -277,11 +277,24 @@ const styles = StyleSheet.create({
     // 移除width设置，因为我们现在在组件中动态设置
   },
   signInButton: {
-    backgroundColor: '#FF6666',
+    backgroundColor: '#F87373',
     padding: 10,
-    borderRadius: 25,
-    marginTop: 10,
+    borderRadius: 30,
+    marginBottom: 20,
     alignItems: 'center',
+    width: 222,
+    height: 43,
+    justifyContent: 'center',
+    alignSelf: 'center',
+    borderWidth: 0,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 8,
   },
   noClassButton: {
     backgroundColor: '#999999',
@@ -296,7 +309,7 @@ const styles = StyleSheet.create({
   },
   signInText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
   },
   calendarContainer: {

@@ -32,7 +32,7 @@ const ExerciseHistory = ({ navigation }) => {
     
     return sortedRecords.reduce((groups, record) => {
       const date = new Date(record.date);
-      const monthKey = `${date.getFullYear()}年${date.getMonth() + 1}月`;
+      const monthKey = `${date.toLocaleString('en-US', { month: 'long' })} ${date.getFullYear()}`;
       if (!groups[monthKey]) {
         groups[monthKey] = [];
       }
@@ -52,15 +52,15 @@ const ExerciseHistory = ({ navigation }) => {
 
   const handleLongPress = () => {
     Alert.alert(
-      '清空历史记录',
-      '确定要清空所有运动记录吗？此操作不可撤销。',
+      'Clear History',
+      'Are you sure you want to clear all exercise records? This action cannot be undone.',
       [
         {
-          text: '取消',
+          text: 'Cancel',
           style: 'cancel',
         },
         {
-          text: '确定',
+          text: 'Confirm',
           onPress: clearHistory,
           style: 'destructive',
         },
@@ -83,10 +83,10 @@ const ExerciseHistory = ({ navigation }) => {
           <View style={styles.textContainer}>
             <Text variant="bodySmall" style={styles.exerciseType}>Running</Text>
             <Text variant="titleLarge" style={styles.distance}>
-              距离: {item.distance.toFixed(2)} 公里
+              Distance: {item.distance.toFixed(2)} km
             </Text>
             <Text variant="bodySmall" style={styles.date}>
-              {new Date(item.date).toLocaleDateString()}
+              {new Date(item.date).toLocaleDateString('en-US')}
             </Text>
           </View>
         </Card.Content>
@@ -117,7 +117,7 @@ const ExerciseHistory = ({ navigation }) => {
                     {record.distance.toFixed(2)} km
                   </Text>
                   <Text variant="bodySmall" style={styles.date}>
-                    {new Date(record.date).toLocaleDateString()}
+                    {new Date(record.date).toLocaleDateString('en-US')}
                   </Text>
                 </View>
               </View>
@@ -148,12 +148,9 @@ const ExerciseHistory = ({ navigation }) => {
         <ScrollView contentContainerStyle={styles.listContainer}>
           {Object.entries(groupedRecords)
             .sort((a, b) => {
-              const [yearA, monthA] = a[0].match(/(\d+)年(\d+)月/).slice(1).map(Number);
-              const [yearB, monthB] = b[0].match(/(\d+)年(\d+)月/).slice(1).map(Number);
-              if (yearA !== yearB) {
-                return yearB - yearA;
-              }
-              return monthB - monthA;
+              const dateA = new Date(Date.parse(`${a[0]}`));
+              const dateB = new Date(Date.parse(`${b[0]}`));
+              return dateB - dateA;
             })
             .map(renderMonthSection)}
         </ScrollView>

@@ -166,7 +166,7 @@ export default function DiscoveryScreen() {
           />
           <TextInput
             style={styles.searchInput}
-            placeholder="搜索"
+            placeholder="Search"
             value={searchQuery}
             onChangeText={setSearchQuery}  // 实时更新搜索框内容
           />
