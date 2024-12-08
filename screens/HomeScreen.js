@@ -96,6 +96,8 @@ export default function HomeScreen() {
       navigation.navigate('PEClasses');
     } else if (buttonType === 'advice') {
       navigation.navigate('Advice');
+    } else if (buttonType === 'award') {
+      navigation.navigate('Award');
     }
     // 可以在这里添加其他按钮类型的处理
   };
@@ -154,7 +156,8 @@ export default function HomeScreen() {
           {
             title: 'Examine\nGrade',
             buttonType: 'check',
-            image: IMAGES.functionCards.ExamineGrade
+            image: IMAGES.functionCards.ExamineGrade,
+            onPress: () => handleCardPress('award')
           }
         ],
         row2: [
