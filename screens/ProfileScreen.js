@@ -1,193 +1,105 @@
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  Image,
+  Dimensions,
+  ScrollView,
+} from "react-native";
 
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, Dimensions, ScrollView } from 'react-native';
-import { COLORS, SIZES } from '../constants/assets';
-import { LineChart, BarChart } from 'react-native-chart-kit';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+const { width: screenWidth } = Dimensions.get("window");
 
 export default function ProfileScreen({ navigation }) {
-  const screenWidth = Dimensions.get('window').width;
-  const [monthlyData, setMonthlyData] = useState({
-    labels: [],
-    counts: [],
-    distances: []
+  const [userData, setUserData] = useState({
+    name: "Peter Hanson",
+    id: "2222222222",
+    typeA: 21,
+    typeB: 4,
   });
 
-  useEffect(() => {
-    loadExerciseData();
-  }, []);
+  const [menuItems] = useState([
+    { title: "My Courses", icon: require("../assets/check mark.png"), navigateTo: "Courses" },
+    { title: "My Grades", icon: require("../assets/medal.png"), navigateTo: "Grades" },
+    { title: "My Races", icon: require("../assets/trophy.png"), navigateTo: "Races" },
+    //{ title: "Set Up", icon: require("../assets/setting.png"), navigateTo: "Settings" },
 
-  const loadExerciseData = async () => {
-    try {
-      const records = await AsyncStorage.getItem('exerciseRecords');
-      if (records) {
-        const exerciseRecords = JSON.parse(records);
-        const monthlyStats = calculateMonthlyStats(exerciseRecords);
-        
-        setMonthlyData({
-          labels: monthlyStats.map(item => `${item.month}月`),
-          counts: monthlyStats.map(item => item.count),
-          distances: monthlyStats.map(item => item.distance)
-        });
-      }
-    } catch (error) {
-      console.error('加载运动记录失败:', error);
-    }
-  };
-
-  const calculateMonthlyStats = (records) => {
-    const months = [];
-    const today = new Date();
-    
-    for (let i = 5; i >= 0; i--) {
-      const month = new Date(today.getFullYear(), today.getMonth() - i, 1);
-      months.push({
-        month: month.getMonth() + 1,
-        year: month.getFullYear(),
-        count: 0,
-        distance: 0
-      });
-    }
-
-    records.forEach(record => {
-      const recordDate = new Date(record.date);
-      const monthStats = months.find(m => 
-        m.month === (recordDate.getMonth() + 1) && 
-        m.year === recordDate.getFullYear()
-      );
-      if (monthStats) {
-        monthStats.count += 1;
-        monthStats.distance += record.distance;
-      }
-    });
-
-    return months.map(m => ({
-      month: m.month,
-      count: m.count,
-      distance: Math.round(m.distance * 10) / 10
-    }));
-  };
+  ]);
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Profile Section */}
-      <View style={styles.profileSection}>
+      {/* Header Section */}
+      <View style={styles.header}>
         <Image
           style={styles.avatar}
           source={require('../assets/avatar.png')}
+ // Replace with your avatar image path
         />
         <View style={styles.userInfo}>
-          <Text style={styles.userName}>Username</Text>
-          <Text style={styles.userStats}>Total Exercise Time: 120h</Text>
+          <Text style={styles.userName}>{userData.name}</Text>
+          <Text style={styles.userId}>ID: {userData.id}</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.settingsIcon}
+          onPress={() => navigation.navigate("Settings")}
+        >
+          <Text style={styles.icon}>⚙️</Text>
+        </TouchableOpacity>
+      </View>
+ 
+      {/* Statistics Section */}
+      <View style={styles.statistics}>
+        <View style={styles.statBox}>
+          <Text style={styles.bigText}>21</Text>
+          <View style={styles.leftBottom}>
+            <Text style={styles.mediumText}>A</Text>
+            <Text style={styles.smallText}>TYPE</Text>
+          </View>
+          <Text style={styles.centerBigText}>04</Text>
+          <View style={styles.rightBottom}>
+            <Text style={styles.mediumText}>B</Text>
+            <Text style={styles.smallText}>TYPE</Text>
+          </View>
         </View>
       </View>
 
-      {/* Statistics Charts */}
-      <View style={styles.chartContainer}>
-        <Text style={styles.chartTitle}>Monthly Exercise Statistics</Text>
-        {monthlyData.labels.length > 0 ? (
-          <>
-            <ScrollView 
-              horizontal 
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              style={styles.chartScroll}
-              snapToInterval={screenWidth}
-              decelerationRate="fast"
-            >
-              {/* Exercise Count Chart */}
-              <View style={[styles.chartWrapper, { width: screenWidth }]}>
-                <BarChart
-                  data={{
-                    labels: monthlyData.labels.map(label => 
-                      label.replace('月', '')  // Remove Chinese character
-                    ),
-                    datasets: [{
-                      data: monthlyData.counts
-                    }]
-                  }}
-                  width={screenWidth - 40}
-                  height={200}
-                  yAxisLabel=""
-                  chartConfig={{
-                    backgroundColor: '#ffffff',
-                    backgroundGradientFrom: '#ffffff',
-                    backgroundGradientTo: '#ffffff',
-                    decimalPlaces: 0,
-                    color: (opacity = 1) => `rgba(75, 107, 245, ${opacity})`,
-                    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                    style: {
-                      borderRadius: 16,
-                    },
-                    barPercentage: 0.7,
-                  }}
-                  style={{
-                    marginVertical: 8,
-                    borderRadius: 16,
-                  }}
-                  showValuesOnTopOfBars={true}
-                />
-                <Text style={styles.chartLegend}>Exercise Count (Times)</Text>
-              </View>
+      {/* Exercise History Button */}
+      <TouchableOpacity
+        style={styles.historyButton}
+        onPress={() => navigation.navigate("ExerciseHistory")}
+      >
+        <Text style={styles.historyButtonText}>EXERCISE HISTORY</Text>
+      </TouchableOpacity>
 
-              {/* Distance Chart */}
-              <View style={[styles.chartWrapper, { width: screenWidth }]}>
-                <LineChart
-                  data={{
-                    labels: monthlyData.labels.map(label => 
-                      label.replace('月', '')  // Remove Chinese character
-                    ),
-                    datasets: [{
-                      data: monthlyData.distances
-                    }]
-                  }}
-                  width={screenWidth - 40}
-                  height={200}
-                  yAxisLabel=""
-                  yAxisSuffix="km"
-                  chartConfig={{
-                    backgroundColor: '#ffffff',
-                    backgroundGradientFrom: '#ffffff',
-                    backgroundGradientTo: '#ffffff',
-                    decimalPlaces: 1,
-                    color: (opacity = 1) => `rgba(255, 72, 66, ${opacity})`,
-                    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                    style: {
-                      borderRadius: 16,
-                    },
-                    propsForDots: {
-                      r: "4",
-                      strokeWidth: "2",
-                      stroke: "#fff"
-                    }
-                  }}
-                  style={{
-                    marginVertical: 8,
-                    borderRadius: 16,
-                  }}
-                  bezier
-                />
-                <Text style={styles.chartLegend}>Exercise Distance (km)</Text>
-              </View>
-            </ScrollView>
-
-            <View style={styles.paginationDots}>
-              <View style={[styles.dot, styles.dotActive]} />
-              <View style={styles.dot} />
-            </View>
-          </>
-        ) : (
-          <Text style={styles.noDataText}>No exercise data available</Text>
-        )}
+      {/* Quick Actions */}
+      <View style={styles.quickActions}>
+        <TouchableOpacity style={styles.actionCard}>
+          <Text style={styles.actionText}>Daily{'\n'} Outfit</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionCard}>
+          <Text style={styles.actionText}>PE{'\n'}Classes</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Exercise History Button */}
-      <TouchableOpacity 
-        style={styles.button}
-        onPress={() => navigation.navigate('ExerciseHistory')}
-      >
-        <Text style={styles.buttonText}>Exercise History</Text>
-      </TouchableOpacity>
+      {/* Menu Items */}
+      <ScrollView style={styles.menu}>
+        {menuItems.map((item, index) => (
+          <TouchableOpacity
+            key={index}
+            style={styles.menuItem}
+            onPress={() => navigation.navigate(item.navigateTo)}
+          >
+            <Image 
+              source={item.icon} 
+              style={item.title === "My Courses" ? styles.myCoursesIcon : styles.menuItemIcon} 
+            />
+            <Text style={styles.menuItemText}>{item.title}</Text>
+            <Text style={styles.menuArrow}>→</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -195,133 +107,205 @@ export default function ProfileScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f9f9f9",
   },
-  profileSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#fff',
-  },
-  profileImagePlaceholder: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#ddd',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  imageText: {
-    color: '#888',
-    fontSize: 14,
-  },
-  profileInfo: {
-    marginLeft: 15,
-  },
-  profileName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  profileDept: {
-    fontSize: 14,
-    color: '#666',
-  },
-  chartSection: {
-    padding: 20,
-    backgroundColor: '#fff',
-    marginVertical: 10,
-  },
-  chartTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  profileSection: {
-    flexDirection: 'row',
-    padding: SIZES.padding.large,
-    alignItems: 'center',
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    backgroundColor: "transparent",
   },
   avatar: {
     width: 80,
     height: 80,
     borderRadius: 40,
+    marginRight: 16,
   },
   userInfo: {
-    marginLeft: SIZES.padding.medium,
+    flex: 1,
   },
   userName: {
-    fontSize: SIZES.fontSize.large,
-    fontWeight: 'bold',
-    color: COLORS.text.primary,
+    fontSize: 18,
+    fontWeight: "bold",
   },
-  userStats: {
-    fontSize: SIZES.fontSize.medium,
-    color: COLORS.text.secondary,
-    marginTop: 4,
+  userId: {
+    fontSize: 14,
+    color: "#666",
   },
-  chartContainer: {
-    padding: SIZES.padding.medium,
-    backgroundColor: COLORS.white,
-    margin: SIZES.padding.medium,
-    borderRadius: 12,
-    overflow: 'hidden',
+  settingsIcon: {
+    padding: 8,
   },
-  chartTitle: {
-    fontSize: SIZES.fontSize.medium,
-    fontWeight: '600',
-    color: COLORS.text.primary,
-    marginBottom: SIZES.padding.medium,
+  icon: {
+    fontSize: 20,
+    color: "#333",
   },
-  button: {
-    backgroundColor: COLORS.primary,
-    padding: SIZES.padding.medium,
+  statistics: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    backgroundColor: "#",
+    marginVertical: 12,
+    paddingVertical: 16,
     borderRadius: 8,
-    marginHorizontal: SIZES.padding.large,
-    alignItems: 'center',
-    marginTop: SIZES.padding.large,
+    marginHorizontal: 16,
   },
-  buttonText: {
-    color: COLORS.white,
-    fontSize: SIZES.fontSize.medium,
-    fontWeight: '600',
-  },
-  noDataText: {
-    textAlign: 'center',
-    marginVertical: 20,
-    color: COLORS.text.secondary,
-  },
-  chartLegend: {
-    textAlign: 'center',
-    color: COLORS.text.secondary,
-    fontSize: SIZES.fontSize.small,
-    marginTop: 4,
-    marginBottom: 8,
-  },
-  chartScroll: {
-    marginHorizontal: -16,
-  },
-  chartWrapper: {
-    paddingHorizontal: 16,
-    backgroundColor: COLORS.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  paginationDots: {
+  statBox: {
+    width: '95%', // 宽度
+    height: 110, // 高度
+    borderRadius: 15, // 圆角
+    backgroundColor: '#4944F1', // 背景颜色
+    padding: 20, // 内边距
     flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 4,
-    marginBottom: 4,
+    justifyContent: 'center', // 垂直居中
+    alignItems: 'center', // 水平居中
+    shadowColor: 'rgba(0, 0, 0, 0.25)', // 阴影颜色
+    shadowOffset: { width: 0, height: 4 }, // 阴影偏移
+    shadowOpacity: 0.25, // 阴影透明度
+    shadowRadius: 4, // 阴影模糊半径
+    elevation: 4, // Android 阴影
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#D9D9D9',
-    marginHorizontal: 4,
+  bigText: {
+    position: 'absolute',
+    top: 19,
+    left: 20,
+    fontSize: 55,
+    fontStyle: 'italic', // 数字 "21"
+    fontWeight: 'bold',
+    color: '#FFFFFF',
   },
-  dotActive: {
-    backgroundColor: COLORS.primary,
-    width: 16,
+  leftBottom: {
+    position: 'absolute',
+    bottom: 20,
+    left: 80,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  centerBigText: {
+    position: 'absolute',
+    top: 19, // 与中间位置保持一致
+    left: '71%',
+    transform: [{ translateX: -25 }], // 居中调整
+    fontSize: 55, // 数字 "04"
+    fontStyle: 'italic',
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  mediumText: {
+    fontSize: 30, // 字母 "A" 和 "B"
+    fontWeight: 'bold',
+    fontStyle: 'italic',
+    color: '#FFFFFF',
+  },
+  smallText: {
+    fontSize: 12, // "TYPE"
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontStyle: 'italic',
+    marginLeft: 5, // 与字母 "A" 和 "B" 的间距
+  },
+  rightBottom: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  historyButton: {
+    backgroundColor: "#4944F1",
+    marginHorizontal: 25,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  historyButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 22,
+    width: 260, // px
+    height: 40, // px
+    flexShrink: 0,
+    
+    //fontFamily: 'Rubik', // 字体
+    
+    fontStyle: 'italic', // 正常字体样式
+    fontWeight:800,
+    lineHeight: 40, // px，对应设计中的行高
+    textAlign: 'left', // 可选，根据布局需要调整对齐方式
+  },
+  quickActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginHorizontal: 26,
+    marginVertical: 12,
+  },
+  actionCard: {
+    width: 130, // px
+    height: 88, // px
+    flexShrink: 0,
+    borderRadius: 15, // 圆角半径，与 SVG 的 `rx` 保持一致
+    backgroundColor: '#D9D9D9', // 背景颜色
+    shadowColor: '#000', // 投影颜色
+    shadowOffset: {
+      width: 0,
+      height: 4, // 投影的垂直偏移，与 `dy` 对应
+    },
+    shadowOpacity: 0.25, // 投影不透明度
+    shadowRadius: 2, // 高斯模糊半径，与 `stdDeviation` 对应
+    elevation: 4, // Android 投影
+  },
+  
+  actionText: {
+    width: 169, // px
+    height: 79, // px
+    flexShrink: 0,
+    color: '#727272',
+    ///fontFamily: 'Rubik',
+    fontSize: 16, // px
+    fontStyle: 'italic',
+    fontWeight: '800',
+    lineHeight: 29, // px
+    textAlign: 'left', // 可选
+    marginLeft: 20,
+    marginTop: 10,
+  },
+  menu: {
+    marginTop: 8,
+  },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: "#fff",
+    marginBottom: 8,
+    borderRadius: 8,
+    marginHorizontal: 16,
+  },
+  menuItemIcon: {
+    width: 30,
+    height: 30,
+    marginRight: 16,
+  },
+  menuItemText: {
+    width: 223, // px
+    height: 30, // px
+    flexShrink: 0,
+    color: '#818181', // 文本颜色
+    //fontFamily: 'Rubik', // 字体
+    fontSize: 16, // px
+    fontStyle: 'normal', // 正常字体样式
+    fontWeight: '700', // 字重
+    lineHeight: 19, // px，对应设计中的行高
+    textAlign: 'left', // 可选，根据布局需要调整对齐方式
+    paddingTop: 5,
+  },
+  menuArrow: {
+    fontSize: 20,
+    color: "#727272",
+  },
+  myCoursesIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 20,
+    marginLeft: 8,
   },
 });
