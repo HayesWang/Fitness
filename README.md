@@ -2,6 +2,41 @@
 
 A campus fitness application developed with React Native and Expo, primarily designed for college students, offering features like exercise tracking and PE course management.
 
+## 🔧Configuration Instructions
+
+### Download the project
+
+```bash
+git clone https://github.com/HayesWang/Fitness.git
+```
+
+### Environment
+
+Make sure you have node, npm, expo-cli installed.
+
+### Dependencies
+
+Fonts
+```bash
+npm install @expo-google-fonts/rubik @expo-google-fonts/rubik-mono-one
+```
+Other Dependencies
+```bash
+npm install @react-native-async-storage/async-storage @react-navigation/bottom-tabs @react-navigation/native @react-navigation/native-stack expo-location react-native-maps polyline
+```
+
+### API Key
+
+You need to get a Google Maps API key to use the map features.(We have a default free tier for testing)
+
+You need to get a OPENAI API key to use the chatbot and suggestion features.(We have a default free tier for testing)
+
+### Run the app
+
+```bash
+npx expo start
+```
+
 ## Key Features
 
 ### 1. Exercise Tracking
@@ -53,6 +88,7 @@ A campus fitness application developed with React Native and Expo, primarily des
 - Google Directions API
 
 ## Project Structure
+```
 fitness/
 ├── assets/ # Static resources like images and fonts
 ├── components/ # Reusable components
@@ -60,6 +96,7 @@ fitness/
 ├── navigation/ # Navigation setup
 ├── screens/ # Application screens
 └── App.js # Application entry point
+```
 
 ## Important Notes
 
