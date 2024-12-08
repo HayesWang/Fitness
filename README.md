@@ -1,8 +1,17 @@
 # Campus Fitness App
 
-A campus fitness application developed with React Native and Expo, primarily designed for college students, offering features like exercise tracking and PE course management.
+[![GitHub stars](https://img.shields.io/github/stars/HayesWang/Fitness)](https://github.com/HayesWang/Fitness/stargazers)
 
-## 🔧Configuration Instructions
+A modern fitness tracking application built with React Native and Expo, designed specifically for college students. The app provides comprehensive fitness tracking features, PE course management, and a social community platform.
+
+## Getting Started
+
+1. **Prerequisites**
+
+   ```bash
+   node -v  # Ensure Node.js is installed
+   npm install -g expo-cli
+   ```
 
 ### Download the project
 
@@ -36,78 +45,122 @@ You need to get a OPENAI API key to use the chatbot and suggestion features.(We 
 ```bash
 npx expo start
 ```
+   
+## App Preview
 
-## Key Features
+<div align="center" style="font-size: 0;">
+  <img src="docs/images/home.png" alt="Home Screen" width="250" style="display: inline-block;"/>
+  <img src="docs/images/profile.png" alt="Profile Screen" width="250" style="display: inline-block;"/>
+</div>
 
-### 1. Exercise Tracking
-- Free Exercise Mode
-  - Real-time GPS tracking
-  - Display duration, distance, and other metrics
-  - Support pause/resume functionality
-  - Save exercise records upon completion
+## Features
 
-- Preset Route Mode
-  - Predefined campus running routes
-  - Route navigation
-  - Real-time progress tracking
+### 🏃‍♂️ Exercise Tracking
 
-### 2. PE Course Management
-- Course Calendar
-  - Display semester PE course schedule
-  - Monthly view with swipe navigation
-  - Highlight today's classes
-- Course Check-in
-  - Location-based attendance
-  - Display classroom location and information
+- **Free Exercise Mode**
 
-### 3. Community Features
-- Exercise Community
-  - Post exercise updates
-  - Like, comment, and share functionality
-  - Follow other users
-- Course Discussion
-  - PE course-related communications
+  - Real-time GPS tracking with accurate distance measurement
+  - Comprehensive metrics (duration, pace, calories)
+  - Pause/resume functionality
+  - Exercise history storage
 
-### 4. Profile Center
-- Exercise Statistics
-  - Monthly exercise frequency
-  - Cumulative distance
-  - Visual exercise data charts
-- Exercise History
-  - Detailed exercise record list
-  - View exercise routes
-  - Clear history option
+- **Campus Routes**
+  - Pre-defined campus running routes
+  - Turn-by-turn navigation
+  - Progress tracking and achievements
 
-## Tech Stack
+### 📚 PE Course Management
 
-- React Native
-- Expo
-- React Navigation
+- **Course Schedule**
+  - Semester-based PE course calendar
+  - Interactive monthly view
+  - Class reminders and notifications
+- **Smart Check-in**
+  - GPS-based attendance system
+  - Classroom information and directions
+
+### 👥 Social Features
+
+- **Fitness Community**
+  - Share workout achievements
+  - Interactive social feed
+  - Follow system and activity tracking
+- **Course Forum**
+  - Class discussions and announcements
+  - Tips and experience sharing
+
+### 👤 User Profile
+
+- **Activity History**
+  - Comprehensive exercise logs
+  - Route replay
+  - Data export options
+
+## Technology Stack
+
+### Core
+
+- React Native (0.76.2)
+- Expo (52.0.7)
+- React (18.3.1)
+
+### Navigation & UI
+
+- React Navigation v7
+- React Native Paper
+- React Native Linear Gradient
+- Expo Font with Rubik fonts
+
+### Maps & Location
+
 - React Native Maps
-- AsyncStorage
-- Google Directions API
+- Expo Location
+- React Native Geolocation Service
+
+### Data Visualization
+
+- React Native Chart Kit
+- React Native SVG
+- @wuba/react-native-echarts
+
+### Storage
+
+- @react-native-async-storage/async-storage
 
 ## Project Structure
+
 ```
 fitness/
-├── assets/ # Static resources like images and fonts
-├── components/ # Reusable components
-├── constants/ # Configuration constants
-├── navigation/ # Navigation setup
-├── screens/ # Application screens
-└── App.js # Application entry point
+├── assets/          # Images, fonts, and static resources
+├── components/      # Reusable UI components
+├── constants/       # App configuration and constants
+├── navigation/      # Navigation configuration
+├── screens/         # Main application screens
+├── App.js          # Application root component
+└── index.js        # Entry point
 ```
 
-## Important Notes
+## Configuration Requirements
 
-1. Google Maps API Key configuration required for map features
-2. Ensure all necessary fonts are installed before running
-3. Device location permissions must be enabled
+1. **Location Services**
+
+   - Enable device location permissions
+   - Configure location accuracy settings
+
+2. **Maps Integration**
+   - Set up Google Maps API key in app.json
+   - Configure necessary map permissions
 
 ## Contributing
 
-Issues and Pull Requests are welcome to help improve the project.
+We welcome contributions! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to your branch
+5. Create a Pull Request
 
 ## License
 
-MIT License
+This project is licensed under the MIT License - see the LICENSE file for details.
