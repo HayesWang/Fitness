@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: 16,
-    backgroundColor: "#fff",
+    backgroundColor: "transparent",
   },
   avatar: {
     width: 80,
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   centerBigText: {
     position: 'absolute',
     top: 19, // 与中间位置保持一致
-    left: '55%',
+    left: '71%',
     transform: [{ translateX: -25 }], // 居中调整
     fontSize: 55, // 数字 "04"
     fontStyle: 'italic',
@@ -306,5 +306,6 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     marginRight: 20,
+    marginLeft: 8,
   },
 });
