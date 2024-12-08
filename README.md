@@ -6,7 +6,7 @@ A modern fitness tracking application built with React Native and Expo, designed
 
 ## Getting Started
 
-1. **Prerequisites**
+### Prerequisites
 
    ```bash
    node -v  # Ensure Node.js is installed
